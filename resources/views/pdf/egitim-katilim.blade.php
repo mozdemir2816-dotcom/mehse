@@ -58,12 +58,15 @@
 
 {{-- Eğitmen kaşe/imzası — position:fixed olduğu için formun HER sayfasında görünür.
      Katılımcı listesi ikinci sayfaya taşarsa da eğitmen imzası orada da olur. --}}
-@if ($kayit->isg_uzmani_var || $kayit->isyeri_hekimi_var)
+    @php
+        $sutunSayisi = 1 + ($kayit->isg_uzmani_var ? 1 : 0) + ($kayit->isyeri_hekimi_var ? 1 : 0);
+        $sutunGenislik = round(100 / $sutunSayisi, 2).'%';
+    @endphp
     <div class="alt-serit">
         <table class="imza">
             <tr>
                 @if ($kayit->isg_uzmani_var)
-                    <td style="width:{{ $kayit->isyeri_hekimi_var ? '33.33%' : '50%' }}">
+                    <td style="width:{{ $sutunGenislik }}">
                         <div class="rol">Eğitimi Veren — İş Güvenliği Uzmanı</div>
                         <div class="ad">{{ $kayit->isg_uzmani_ad ?: ($firma?->igu?->ad_soyad ?: '') }}@if ($firma?->igu?->sertifika_no) ({{ $firma->igu->sertifika_no }})@endif&nbsp;</div>
                         <div class="kase">
@@ -75,7 +78,7 @@
                     </td>
                 @endif
                 @if ($kayit->isyeri_hekimi_var)
-                    <td style="width:{{ $kayit->isg_uzmani_var ? '33.33%' : '50%' }}">
+                    <td style="width:{{ $sutunGenislik }}">
                         <div class="rol">Eğitimi Veren — İşyeri Hekimi</div>
                         <div class="ad">{{ $kayit->isyeri_hekimi_ad ?: ($firma?->isyeriHekimi?->ad_soyad ?: '') }}@if ($firma?->isyeriHekimi?->sertifika_no) ({{ $firma->isyeriHekimi->sertifika_no }})@endif&nbsp;</div>
                         <div class="kase">
@@ -86,7 +89,7 @@
                         <div class="imza-satir">Kaşe / İmza</div>
                     </td>
                 @endif
-                <td style="width:{{ ($kayit->isg_uzmani_var && $kayit->isyeri_hekimi_var) ? '33.33%' : '50%' }}">
+                <td style="width:{{ $sutunGenislik }}">
                     <div class="rol">İşveren / İşveren Vekili</div>
                     <div class="ad">{{ $firma?->isveren_vekili ?: ($firma?->isveren_ad ?: '') }}&nbsp;</div>
                     <div class="kase"></div>
@@ -96,7 +99,6 @@
         </table>
         <p class="yasal">6331 Sayılı İş Sağlığı ve Güvenliği Kanunu Madde 17 uyarınca düzenlenmiştir.</p>
     </div>
-@endif
 
 <div class="sayfa">
 

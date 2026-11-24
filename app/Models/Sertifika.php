@@ -16,6 +16,7 @@ class Sertifika extends Model
     protected $guarded = ['id'];
 
     protected $casts = [
+        'belge_tarihi' => 'date',
         'gun_sayisi' => 'integer',
         'egitim_tarihleri' => 'array',
         'gecerlilik_tarihi' => 'date',

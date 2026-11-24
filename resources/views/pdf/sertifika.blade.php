@@ -84,8 +84,8 @@
         </table>
 
         <p class="metin">
-            Yukarıda adı geçen katılımcı, "Çalışanların İş Sağlığı ve Güvenliği Eğitimleri Usul ve Esasları
-            hakkında" yönetmelik kapsamında verilen "{{ $sertifika->tipEtiketi() }}" eğitimlerini başarıyla
+            Yukarıda adı geçen katılımcı, "Çalışanların İş Sağlığı ve Güvenliği Eğitimlerinin Usul ve Esasları
+            Hakkında Yönetmelik" kapsamında verilen "{{ $sertifika->tipEtiketi() }}" eğitimlerini başarıyla
             tamamlayarak bu eğitim belgesini almaya hak kazanmıştır.
         </p>
 
@@ -111,7 +111,7 @@
                         </div>
                         <div class="blok">
                             @php $s = $sure($sertifika->konu_icerigi['saglik_konulari'] ?? []); @endphp
-                            <div class="blok-baslik">2. Sağlık Konular (Fiili Ders: {{ $s['fiili'] }}dk / Din: {{ $s['dinlenme'] }}dk)</div>
+                            <div class="blok-baslik">2. Sağlık Konuları (Fiili Ders: {{ $s['fiili'] }}dk / Din: {{ $s['dinlenme'] }}dk)</div>
                             @foreach ($saglik as $i => $m)
                                 <p>{{ $harf($i) }}) {{ $m['madde'] }} ({{ $m['dakika'] }} dk)</p>
                             @endforeach
@@ -197,7 +197,7 @@
                 ?? $sertifika->created_at?->format('d.m.Y')
                 ?? now()->format('d.m.Y');
         @endphp
-        <p class="not">(1 ders saati: 45 dk ders + 15 dk Dinlenme)</p>
+        <p class="not">(1 ders saati: 45 dk ders + 15 dk Dinlenme)@if ($sertifika->belge_no) &nbsp;·&nbsp; Belge No : <strong>{{ $sertifika->belge_no }}</strong>@endif</p>
         <p class="tarih-sag">Düzenleme Tarihi : {{ $duzenlemeTarihi }}</p>
 
         </div>

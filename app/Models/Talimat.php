@@ -26,9 +26,8 @@ class Talimat extends Model
         'boyut' => 'integer',
     ];
 
-    /** Düz (numaralı) talimatların sonundaki tebliğ metni — kullanıcının inşaat talimatlarından birebir. */
-    public const TAAHHUT_DUZ = "Her işçi kendi emniyetini almakla yükümlüdür. Yapılacak işin gereğine uygun olarak iş güvenliği ile ilgili her türlü gereç ve vasıtaları ilgililerden isteyip kullanmak zorundadırlar. Aksi takdirde meydana gelebilecek kaza ve neticelerden ve iş güvenliği talimatlarını bilmemekten dolayı geçireceğiniz veya sebep olacağınız bir kazadan dolayı sorumlu olacağınızı unutmayınız. Yukarıdaki maddeleri tamamen okudum.\n"
-        .'İş güvenliği ile ilgili eğitimi aldım, işim ve ilgili hususlarda tatbiki gerekenlerin tatbikini yapacağım, eğer yetkim dışında ise derhal yetkilisine ve işyerine müracaat edeceğim. Bu talimat tutanağını tamamen okuyup anlayarak ve iş güvenliği kaidelerine ve talimatlarına harfiyen riayet edeceğimi bildirerek imza ediyorum.';
+    /** Düz (numaralı) talimatların sonundaki tebliğ-tebellüğ metni (6331 SK m.16, m.17 ve m.19 uyumlu). */
+    public const TAAHHUT_DUZ = "Yukarıda yer alan iş sağlığı ve güvenliği çalışma talimatını okudum, anladım ve bir nüshasını teslim aldım. 6331 sayılı İş Sağlığı ve Güvenliği Kanunu m.19 uyarınca işveren tarafından sağlanan iş ekipmanlarını, güvenlik donanımlarını ve kişisel koruyucu donanımları doğru kullanacağımı, iş sağlığı ve güvenliği kurallarına uyacağımı ve ciddi veya yakın bir tehlike ile karşılaştığımda derhal amirime ve işyerine bildireceğimi beyan ederim.";
 
     /** Bölümlü talimatların son bölümü (TAAHHÜT) — Kalıp/Demir talimatlarından birebir. */
     public const TAAHHUT_BOLUMLU = 'Bu talimatı okudum, anladım ve iş sağlığı ve güvenliği kurallarına uygun şekilde çalışacağımı kabul ederim.';

@@ -76,7 +76,11 @@
             <div style="font-weight:bold;font-size:11px;margin:8px 0 12px">TEMEL EĞİTİM BELGESİ</div>
 
             <div>İşbu belge,</div>
-            <div style="margin:8px 0"><strong>{{ $calisan?->ad_soyad }}</strong>@if ($calisan?->gorev) ({{ $calisan->gorev }})@endif adına</div>
+            <div style="margin:8px 0">
+                <strong>{{ $calisan?->ad_soyad }}</strong>@if ($calisan?->gorev) ({{ $calisan->gorev }})@endif
+                @if ($calisan?->tc)<br><span style="font-size:8.5px;color:#333">T.C. Kimlik No: {{ $calisan->tc }}</span>@endif
+                adına
+            </div>
 
             <div style="text-indent:24px;text-align:justify">
                 Çalışanların İş Sağlığı ve Güvenliği Eğitimlerinin Usul ve Esasları Hakkında Yönetmelik kapsamında
@@ -84,8 +88,17 @@
                 <strong>{{ $tarih }}</strong> tarihinde gerçekleştirilen temel eğitim sonunda düzenlenmiştir.
             </div>
 
-            <div style="margin-top:16px">
-                <div class="alan">Belge düzenlenme tarihi: <strong>{{ now()->format('d.m.Y') }}</strong></div>
+            @php
+                $duzenlemeCarbon = $atama->tamamlandi_at ?? $atama->updated_at ?? now();
+                $gecerlilikYil = match ($tehlike) {
+                    'cok_tehlikeli' => 1,
+                    'tehlikeli' => 2,
+                    default => 3,
+                };
+                $gecerlilikTarihi = $duzenlemeCarbon->copy()->addYears($gecerlilikYil)->format('d.m.Y');
+            @endphp
+            <div style="margin-top:14px">
+                <div class="alan">Belge düzenlenme tarihi: <strong>{{ $duzenlemeCarbon->format('d.m.Y') }}</strong> &nbsp;·&nbsp; Geçerlilik tarihi: <strong>{{ $gecerlilikTarihi }}</strong></div>
                 <div class="alan">Eğitimin süresi: <strong>{{ intdiv($dk, 60) }} saat {{ $dk % 60 }} dk</strong> (≈ {{ round($dk / max(1, $dersSaati), 1) }} ders saati, uzaktan)@if ($yuzYuzeSaat) + <strong>{{ $yuzYuzeSaat }} ders saati yüz yüze</strong>@if ($dorduncuYuzYuze) (4. konu dahil)@endif @endif</div>
                 <div class="alan">Fiilen izlenen net uzaktan süre: <strong>{{ intdiv($netDk, 60) }} saat {{ $netDk % 60 }} dk</strong></div>
                 <div class="alan">
@@ -94,9 +107,9 @@
                 </div>
                 <div class="alan">
                     Eğitimin şekli: Uzaktan {!! $kutu(true) !!} (Başlık {{ $uzaktanBasliklar }})
-                    <div style="padding-left:62px">Yüz yüze {!! $kutu(false) !!} (Başlık {{ $dorduncuYuzYuze ? '4 — ayrıca yüz yüze verilir' : '……' }})</div>
+                    <div style="padding-left:62px">Yüz yüze {!! $kutu($yuzYuzeSaat > 0 || $dorduncuYuzYuze) !!} (Başlık {{ $dorduncuYuzYuze ? '4 — ayrıca yüz yüze verilir' : ($yuzYuzeSaat > 0 ? 'pratik / yüz yüze tamamlama' : '……') }})</div>
                 </div>
-                <div class="alan">Eğiticilerin adı soyadı ve ünvanı:</div>
+                <div class="alan">Eğiticilerin adı soyadı ve unvanı:</div>
                 <div class="alan" style="padding-left:10px">— <strong>{{ $iguAd }}</strong>, {{ $iguUnvan }}@if ($egitimciUnvan && ! $igu) ({{ $egitimciUnvan }})@endif @if ($iguNo) · Belge no: {{ $iguNo }}@endif @if ($atama->igu_onay_at) · onay {{ $atama->igu_onay_at->format('d.m.Y') }}@endif</div>
                 @if ($ihAd)
                     <div class="alan" style="padding-left:10px">— <strong>{{ $ihAd }}</strong>, {{ $ihUnvan }} @if ($ihNo) · Diploma / belge no: {{ $ihNo }}@endif @if ($atama->ih_onay_at) · onay {{ $atama->ih_onay_at->format('d.m.Y') }}@endif</div>
@@ -110,9 +123,9 @@
                 @endif
             </div>
 
-            <div style="margin-top:22px">
-                <div class="alan">Çalışanın işyerinin ünvanı: <strong>{{ $firma?->unvan }}</strong></div>
-                <div class="alan">İşverenin/işveren vekilinin adı soyadı: <strong></strong></div>
+            <div style="margin-top:18px">
+                <div class="alan">Çalışanın işyerinin unvanı: <strong>{{ $firma?->unvan }}</strong></div>
+                <div class="alan">İşverenin/işveren vekilinin adı soyadı: <strong>{{ $firma?->isveren_vekili ?: ($firma?->isveren_ad ?: '') }}</strong></div>
                 <div class="alan">İşveren/işveren vekilinin imzası:</div>
                 @if ($ayar?->calisan_imza_alani)
                     <div class="alan" style="margin-top:14px">Çalışanın imzası: ..................................................</div>
@@ -147,7 +160,7 @@
                 <tr><td>Seviye tespit (ön test)</td><td class="sure">{{ \App\Models\EgitimPaketi::sinavSureDk('on_test') }} dk</td></tr>
                 <tr><td>Final sınavı</td><td class="sure">{{ \App\Models\EgitimPaketi::sinavSureDk('final') }} dk</td></tr>
                 <tr class="ana"><td>{{ config('isg.uzaktan_egitim.ek1_dorduncu_baslik') }}</td><td class="sure">{{ $yuzYuzeSaat ? $yuzYuzeSaat.' ders saati (yüz yüze)' : (($konuDk[4] ?? 0) ? $konuDk[4].' dk' : '') }}</td></tr>
-                <tr><td>{{ config('isg.uzaktan_egitim.ek1_dorduncu_a') }} {!! $kutu(false) !!}@if ($dorduncuYuzYuze) <em>(yüz yüze verilir)</em>@endif</td><td class="sure"></td></tr>
+                <tr><td>{{ config('isg.uzaktan_egitim.ek1_dorduncu_a') }} {!! $kutu($dorduncuYuzYuze) !!}@if ($dorduncuYuzYuze) <em>(yüz yüze verilir)</em>@endif</td><td class="sure"></td></tr>
                 <tr><td>{{ config('isg.uzaktan_egitim.ek1_dorduncu_b') }} {!! $kutu($tehlike === 'az_tehlikeli') !!}</td><td class="sure"></td></tr>
             </table>
         </td>

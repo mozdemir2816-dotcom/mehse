@@ -3,7 +3,7 @@
 <body>
 @include('pdf.ekipman._antet', ['baslik' => $basligi])
 @php
-    $kkdBolumu = collect($talimat->bolumler ?? [])->first(fn ($b) => str_contains(mb_strtoupper($b['baslik']), 'KKD') || str_contains(mb_strtoupper($b['baslik']), 'KORUYUCU'));
+    $kkdBolumu = collect($talimat->bolumler ?? [])->first(fn ($b) => str_contains(\App\Support\TurkceMetin::buyuk((string) ($b['baslik'] ?? '')), 'KKD') || str_contains(\App\Support\TurkceMetin::buyuk((string) ($b['baslik'] ?? '')), 'KORUYUCU'));
     $kkdler = $talimat->kkdler ?: ($kkdBolumu['maddeler'] ?? []);
     $no = 0;
 @endphp
@@ -24,16 +24,14 @@
     <h2>GÜVENLİ ÇALIŞMA KURALLARI</h2>
     <ol>@foreach ($talimat->maddeler as $m)<li>{{ $m }}</li>@endforeach</ol>
 @endif
-@if (filled($talimat->taahhut))
-    <p class="aciklama" style="margin-top:6px"><strong>Taahhüt:</strong> {{ $talimat->taahhut }}</p>
-@endif
+<p class="aciklama" style="margin-top:6px"><strong>Tebellüğ / Taahhüt:</strong> {{ $talimat->taahhutMetni() }}</p>
 
 <table class="imza">
-    <tr><th>HAZIRLAYAN<br>İş Güvenliği Uzmanı</th><th>ONAYLAYAN<br>İşveren / İşveren Vekili</th><th>TEBELLÜĞ EDEN<br>Operatör</th></tr>
+    <tr><th>HAZIRLAYAN<br>İş Güvenliği Uzmanı</th><th>ONAYLAYAN<br>İşveren / İşveren Vekili</th><th>TEBELLÜĞ EDEN<br>Operatör / Çalışan</th></tr>
     <tr>
-        <td>{{ $tebligEden->ad }}<br>@if ($tebligEden->imza_gorseli && is_file($p = storage_path('app/public/'.$tebligEden->imza_gorseli)))<img src="{{ $p }}">@endif<br>İmza:</td>
+        <td>{{ $tebligEden->ad }}@if ($firma?->igu?->sertifika_no)<br>Belge No: {{ $firma->igu->sertifika_no }}@endif<br>@if ($tebligEden->imza_gorseli && is_file($p = storage_path('app/public/'.$tebligEden->imza_gorseli)))<img src="{{ $p }}">@endif<br>İmza:</td>
         <td>{{ $firma->isveren_vekili ?: $firma->isveren_ad }}<br><br>Kaşe / İmza:</td>
-        <td>Adı soyadı:<br><br>Tarih: ....../....../..........<br>İmza:</td>
+        <td>Adı soyadı:<br>T.C. Kimlik No:<br>Yetki/Op. Belge No:<br>Tarih: ..../..../...... · İmza:</td>
     </tr>
 </table>
 @if ($talimat->aciklama && str_contains($talimat->aciklama, 'Yapay zekâ'))

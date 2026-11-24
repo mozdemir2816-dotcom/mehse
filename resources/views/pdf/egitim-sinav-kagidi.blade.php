@@ -30,7 +30,7 @@
 @foreach ($katilimcilar as $k)
     <div class="sayfa">
         <div class="baslik">
-            <h1>İŞ SAĞLIĞI VE GÜVENLİĞİ EĞİTİMİ DEĞERLENDİRME SINAVI ({{ mb_strtoupper($sinavTuru, 'UTF-8') }})</h1>
+            <h1>İŞ SAĞLIĞI VE GÜVENLİĞİ EĞİTİMİ DEĞERLENDİRME SINAVI ({{ \App\Support\TurkceMetin::buyuk($sinavTuru) }})</h1>
             <div class="alt">{{ $firma?->unvan ?: '..........................................................' }} — {{ $egitimBasligi }}</div>
         </div>
 
@@ -50,7 +50,7 @@
                 <div class="soru-metin">{{ $i + 1 }}. {{ $s['soru'] }} (10 Puan)</div>
                 <div class="siklar">
                     @foreach ($s['siklar'] as $harf => $metin)
-                        <div class="sik">◯ <strong>{{ $harf }})</strong> {{ $metin }}</div>
+                        <div class="sik">☐ <strong>{{ $harf }})</strong> {{ $metin }}</div>
                     @endforeach
                 </div>
             </div>
@@ -79,7 +79,7 @@
     </div>
 
     <p style="font-size:9.5px">
-        Her soru <strong>10 puan</strong> değerindedir (Toplam 100 puan). Çalışanların İş Sağlığı ve Güvenliği Eğitimlerinin Usul ve Esasları Hakkında Yönetmelik m.15 uyarınca yapılan ölçme ve değerlendirme sonucunda başarılı sayılma taban puanı <strong>60</strong>'tır.
+        Her soru <strong>10 puan</strong> değerindedir (Toplam 100 puan). Çalışanların İş Sağlığı ve Güvenliği Eğitimlerinin Usul ve Esasları Hakkında Yönetmelik (RG 02.04.2026 / 33212, m.16) uyarınca yapılan ölçme ve değerlendirme sonucunda başarılı sayılma taban puanı <strong>60</strong>'tır.
     </p>
 
     <table class="cevap">

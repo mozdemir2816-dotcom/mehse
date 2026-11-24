@@ -6,15 +6,17 @@
     * { font-family: DejaVu Sans, sans-serif; }
     body { margin: 0; color: #111; font-size: 11px; }
     .sayfa { padding: 26px 32px; page-break-after: always; }
+    .sayfa:last-child { page-break-after: auto; }
     .baslik { text-align: center; border-bottom: 3px double #111; padding-bottom: 10px; margin-bottom: 14px; }
     .baslik h1 { font-size: 15px; margin: 0 0 4px; }
     .kunye { width: 100%; border-collapse: collapse; font-size: 10px; margin-bottom: 14px; }
     .kunye td { border: 1px solid #999; padding: 5px 8px; }
-    .kunye td:first-child { background: #f0f0f0; font-weight: bold; width: 22%; }
+    .kunye td:nth-child(odd) { background: #f0f0f0; font-weight: bold; width: 20%; }
     .soru { margin-bottom: 12px; page-break-inside: avoid; }
     .soru .metin { font-weight: bold; font-size: 10.5px; margin-bottom: 4px; }
     .soru .secenek { font-size: 10px; margin: 2px 0 2px 14px; }
-    .dogru { color: #10b981; font-weight: bold; }
+    table.imza { width: 100%; border-collapse: collapse; margin-top: 16px; font-size: 9.5px; page-break-inside: avoid; }
+    table.imza td { border: 1px solid #999; width: 50%; padding: 6px 8px 30px; vertical-align: top; }
     table.anahtar { width: 100%; border-collapse: collapse; font-size: 10px; margin-top: 8px; }
     table.anahtar th, table.anahtar td { border: 1px solid #999; padding: 4px 8px; text-align: left; }
     table.anahtar th { background: #f0f0f0; }
@@ -35,26 +37,36 @@
                 <td>Zorluk</td><td>{{ config('isg.egitim_sorulari.zorluklar.'.$sinav->zorluk, $sinav->zorluk) }}</td>
             </tr>
             <tr>
-                <td>Sınav Zamanı</td><td colspan="3">{{ $sinav->zamanEtiketi() }}</td>
+                <td>Sınav Zamanı</td><td>{{ $sinav->zamanEtiketi() }}</td>
+                <td>Sınav Tarihi / Puan</td><td>{{ $k['sinav_tarihi'] ?? now()->format('d.m.Y') }} &nbsp;|&nbsp; <strong>Puan: ...... / 100</strong></td>
             </tr>
-            @if ($k)
-                <tr>
-                    <td>Ad Soyad</td><td>{{ $k['ad_soyad'] ?? '—' }}</td>
-                    <td>Sınav Tarihi</td><td>{{ $k['sinav_tarihi'] ?? '—' }}</td>
-                </tr>
-            @endif
+            <tr>
+                <td>Ad Soyad</td><td>{{ $k['ad_soyad'] ?? '' }}</td>
+                <td>T.C. Kimlik No</td><td>{{ $k['tc'] ?? '' }}</td>
+            </tr>
+            <tr>
+                <td>Görevi / Bölümü</td><td>{{ $k['gorev'] ?? '' }}</td>
+                <td>Başarı Durumu</td><td>☐ Başarılı (≥60) &nbsp; ☐ Tekrar</td>
+            </tr>
         </table>
 
         @foreach (($sinav->sorular ?? []) as $i => $s)
             <div class="soru">
                 <div class="metin">{{ $i + 1 }}. {{ $s['soru'] }}</div>
                 @foreach (($s['secenekler'] ?? []) as $j => $secenek)
-                    <div class="secenek {{ ($sinav->cevap_anahtari_dahil && $j === ($s['dogru_index'] ?? -1)) ? 'dogru' : '' }}">
+                    <div class="secenek">
                         {{ chr(65 + $j) }}) {{ $secenek }}
                     </div>
                 @endforeach
             </div>
         @endforeach
+
+        <table class="imza">
+            <tr>
+                <td><strong>Katılımcı (Çalışan) İmzası:</strong><br>{{ $k['ad_soyad'] ?? '' }}</td>
+                <td><strong>Değerlendiren Eğitici / İSG Uzmanı İmzası:</strong><br>{{ $firma?->igu?->ad_soyad ?: '' }}</td>
+            </tr>
+        </table>
     </div>
 @empty
 @endforelse

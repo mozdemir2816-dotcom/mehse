@@ -264,8 +264,18 @@ class SertifikaYildizGrupUretici
         );
         $sheet->setCellValue('D10', $paragraf);
 
-        $sheet->setCellValue('F16', now()->format('d/m/Y'));
-        $sheet->setCellValue('F17', ($s->sure_metni ?: '16 Ders Saati'));
+        $sonEgitimTarihi = collect($s->egitim_tarihleri ?? [])->filter()->last();
+        $duzenlemeTarihi = $s->belge_tarihi?->format('d/m/Y')
+            ?? ($sonEgitimTarihi ? Carbon::parse($sonEgitimTarihi)->format('d/m/Y') : null)
+            ?? $s->created_at?->format('d/m/Y')
+            ?? now()->format('d/m/Y');
+        $varsayilanSure = match ($firma?->tehlike_sinifi) {
+            'az_tehlikeli' => '8 Ders Saati',
+            'tehlikeli' => '12 Ders Saati',
+            default => '16 Ders Saati',
+        };
+        $sheet->setCellValue('F16', $duzenlemeTarihi);
+        $sheet->setCellValue('F17', ($s->sure_metni ?: $varsayilanSure));
 
         // Eğiticiler bu şablonda her zaman İGU + İşyeri Hekimi — ad ve kaşe firmaya
         // atanmış İSG Profesyonellerinden çekilir (yoksa sertifika snapshot'ına düşer).

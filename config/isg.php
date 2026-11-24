@@ -6369,7 +6369,7 @@ return [
             'tehlikeli' => 2,
             'cok_tehlikeli' => 1,
         ],
-        'sureler' => ['4 saat', '8 saat', '8 Ders saati', '16 saat'],
+        'sureler' => ['4 saat', '8 saat', '8 Ders saati', '12 saat', '12 Ders saati', '16 saat', '16 Ders saati'],
         // isgpratik'in gerçek sertifika çıktılarında görülen 4 çerçeve seçeneği.
         'cerceveler' => [
             'sade' => 'Sade — çerçevesiz',

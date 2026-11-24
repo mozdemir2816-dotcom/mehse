@@ -113,7 +113,7 @@ class TalimatYapisiTest extends TestCase
             'tebligEden' => TalimatUretici::tebligEden($this->firma), 'imzali' => false,
         ])->render();
         $this->assertStringContainsString('2. Alt maddeli kural;<br />', $html);
-        $this->assertStringContainsString('Her işçi kendi emniyetini almakla yükümlüdür.', $html);
+        $this->assertStringContainsString('6331 sayılı İş Sağlığı ve Güvenliği Kanunu m.19', $html);
         $this->assertStringContainsString('TEBLİĞ EDEN', $html);
         $this->assertStringNotContainsString('Mehmet Özdemir', $html);   // imzasız (matbu): ad basılmaz
     }

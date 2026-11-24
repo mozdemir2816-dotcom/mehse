@@ -104,10 +104,10 @@
 
 <table class="imza">
     <tr>
-        <td>
-            <div class="rol">TEBLİĞ EDEN</div>
+        <td style="width:33.33%">
+            <div class="rol">TEBLİĞ EDEN (HAZIRLAYAN)</div>
             <div class="satir">Ad Soyad : {{ $imzali ? $tebligEden->ad : '' }}</div>
-            <div class="satir">Unvan : {{ $tebligEden->unvan }}</div>
+            <div class="satir">Unvan : {{ $tebligEden->unvan }}@if ($firma?->igu?->sertifika_no) ({{ $firma->igu->sertifika_no }})@endif</div>
             <div class="satir">Tarih :</div>
             <div class="satir">İmza :</div>
             @php
@@ -121,13 +121,21 @@
                 </div>
             @endif
         </td>
-        <td>
-            <div class="rol">TEBELLÜĞ EDEN</div>
+        <td style="width:33.33%">
+            <div class="rol">ONAYLAYAN (İŞVEREN / VEKİLİ)</div>
+            <div class="satir">Ad Soyad : {{ $firma?->isveren_vekili ?: ($firma?->isveren_ad ?: '') }}</div>
+            <div class="satir">Unvan : İşveren / İşveren Vekili</div>
+            <div class="satir">Tarih :</div>
+            <div class="satir">Kaşe / İmza :</div>
+        </td>
+        <td style="width:33.33%">
+            <div class="rol">TEBELLÜĞ EDEN (ÇALIŞAN)</div>
             <div class="satir">Ad Soyad : {{ $tebellugAlan['ad_soyad'] ?? '' }}</div>
+            <div class="satir">T.C. Kimlik No : {{ $tebellugAlan['tc'] ?? '' }}</div>
             <div class="satir">Görevi : {{ $tebellugAlan['gorev'] ?? '' }}</div>
             <div class="satir">Tarih : {{ $tebellugAlan['tarih'] ?? '' }}</div>
             <div class="satir">İmza :</div>
-            @if (! empty($tebellugAlan['imza'] ?? null))
+            @if (! empty($tebellugAlan['imza'] ?? null) && (str_starts_with((string) $tebellugAlan['imza'], 'data:image/') || is_file((string) $tebellugAlan['imza'])))
                 <div><img src="{{ $tebellugAlan['imza'] }}"></div>
             @endif
         </td>
@@ -144,18 +152,23 @@
             okunarak / anlatılarak tebliğ edilmiş, bir nüshası teslim edilmiştir.
         </p>
         <table style="width:100%;border-collapse:collapse;font-size:9px">
-            <tr>
-                @foreach (['Sıra' => '6%', 'Adı Soyadı' => '30%', 'Görevi' => '24%', 'Tarih' => '16%', 'İmza' => '24%'] as $baslik => $gen)
-                    <th style="border:1px solid #555;background:#eee;padding:4px;width:{{ $gen }}">{{ $baslik }}</th>
-                @endforeach
-            </tr>
-            @for ($i = 1; $i <= $tebellugSatiri; $i++)
+            <thead style="display:table-header-group">
                 <tr>
+                    @foreach (['Sıra' => '5%', 'Adı Soyadı' => '24%', 'T.C. Kimlik No' => '17%', 'Görevi' => '20%', 'Tarih' => '13%', 'İmza' => '21%'] as $baslik => $gen)
+                        <th style="border:1px solid #555;background:#eee;padding:4px;width:{{ $gen }}">{{ $baslik }}</th>
+                    @endforeach
+                </tr>
+            </thead>
+            <tbody>
+            @for ($i = 1; $i <= $tebellugSatiri; $i++)
+                <tr style="page-break-inside:avoid">
                     <td style="border:1px solid #555;height:24px;text-align:center">{{ $i }}</td>
                     <td style="border:1px solid #555"></td><td style="border:1px solid #555"></td>
                     <td style="border:1px solid #555"></td><td style="border:1px solid #555"></td>
+                    <td style="border:1px solid #555"></td>
                 </tr>
             @endfor
+            </tbody>
         </table>
     </div>
 @endif
