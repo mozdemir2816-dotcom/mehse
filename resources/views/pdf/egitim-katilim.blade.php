@@ -101,7 +101,7 @@
 <div class="sayfa">
 
     <div class="baslik">
-        @if ($firma?->logo)
+        @if ($firma?->logo && is_file(storage_path('app/public/'.$firma->logo)))
             <img src="{{ storage_path('app/public/'.$firma->logo) }}">
         @endif
         <h1>EĞİTİM KATILIM FORMU</h1>

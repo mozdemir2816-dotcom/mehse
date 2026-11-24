@@ -110,10 +110,14 @@
             <div class="satir">Unvan : {{ $tebligEden->unvan }}</div>
             <div class="satir">Tarih :</div>
             <div class="satir">İmza :</div>
-            @if ($imzali && ($tebligEden->kase_gorseli || $tebligEden->imza_gorseli))
+            @php
+                $kaseYol = $tebligEden->kase_gorseli ? storage_path('app/public/'.$tebligEden->kase_gorseli) : null;
+                $imzaYol = $tebligEden->imza_gorseli ? storage_path('app/public/'.$tebligEden->imza_gorseli) : null;
+            @endphp
+            @if ($imzali && (($kaseYol && is_file($kaseYol)) || ($imzaYol && is_file($imzaYol))))
                 <div>
-                    @if ($tebligEden->kase_gorseli)<img src="{{ storage_path('app/public/'.$tebligEden->kase_gorseli) }}">@endif
-                    @if ($tebligEden->imza_gorseli)<img src="{{ storage_path('app/public/'.$tebligEden->imza_gorseli) }}">@endif
+                    @if ($kaseYol && is_file($kaseYol))<img src="{{ $kaseYol }}">@endif
+                    @if ($imzaYol && is_file($imzaYol))<img src="{{ $imzaYol }}">@endif
                 </div>
             @endif
         </td>

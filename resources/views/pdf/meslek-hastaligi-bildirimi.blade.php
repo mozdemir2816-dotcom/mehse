@@ -89,7 +89,7 @@
     <table class="imza">
         <tr>
             <td>
-                @if ($firma?->isyeriHekimi?->kase_gorseli)
+                @if (($imzali ?? true) && $firma?->isyeriHekimi?->kase_gorseli && is_file(storage_path('app/public/'.$firma->isyeriHekimi->kase_gorseli)))
                     <img src="{{ storage_path('app/public/'.$firma->isyeriHekimi->kase_gorseli) }}">
                 @endif
                 İşyeri Hekimi<br>(Kaşe / İmza)

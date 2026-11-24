@@ -24,11 +24,11 @@
 <body>
 <table class="antet">
     <tr>
-        @if ($logo)<td class="logo"><img src="{{ $logo }}"></td>@endif
+        @if ($logo && is_file((string) $logo))<td class="logo"><img src="{{ $logo }}"></td>@endif
         <td class="baslik">
-            <h1>KİMYASAL GÜVENLİK BİLGİ FORMU (MSDS) ÖZETİ</h1>
-            <div>{{ $firma->unvan }}</div>
-            <div>{{ collect([$firma->sgk_sicil_no ? 'SGK Sicil: '.$firma->sgk_sicil_no : null, trim(($firma->adres ?? '').' '.($firma->ilce ?? '').($firma->il ? ' / '.$firma->il : ''))])->filter()->implode(' · ') }}</div>
+            <h1>KİMYASAL GÜVENLİK BİLGİ FORMU (GBF / MSDS) ÖZETİ</h1>
+            <div>{{ $firma?->unvan }}</div>
+            <div>{{ collect([$firma?->sgk_sicil_no ? 'SGK Sicil: '.$firma->sgk_sicil_no : null, trim(($firma?->adres ?? '').' '.($firma?->ilce ?? '').($firma?->il ? ' / '.$firma->il : ''))])->filter()->implode(' · ') }}</div>
         </td>
     </tr>
 </table>
@@ -83,8 +83,8 @@
 <table class="imza">
     <tr><th>HAZIRLAYAN<br>İş Güvenliği Uzmanı</th><th>ONAYLAYAN<br>İşveren / İşveren Vekili</th></tr>
     <tr>
-        <td>{{ \App\Support\TalimatUretici::tebligEden($firma)->ad }}<br>Tarih: {{ $tarih }}<br>İmza:</td>
-        <td>{{ $firma->isveren_vekili ?: $firma->isveren_ad }}<br>Tarih: ....../....../..........<br>Kaşe / İmza:</td>
+        <td>{{ $firma ? \App\Support\TalimatUretici::tebligEden($firma)->ad : '' }}<br>Tarih: {{ $tarih }}<br>İmza:</td>
+        <td>{{ $firma?->isveren_vekili ?: $firma?->isveren_ad }}<br>Tarih: ....../....../..........<br>Kaşe / İmza:</td>
     </tr>
 </table>
 

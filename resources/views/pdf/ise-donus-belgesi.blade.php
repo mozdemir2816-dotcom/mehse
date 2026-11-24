@@ -95,24 +95,35 @@
 
 <table class="imza">
     <tr>
-        <td>
+        <td style="width:33.33%">
             <div class="rol">İşyeri Hekimi</div>
             <div class="kutu2">
                 @if ($belge->hekim_kase && is_file(storage_path('app/public/'.$belge->hekim_kase)))
                     @if ($imzali ?? true)<img src="{{ storage_path('app/public/'.$belge->hekim_kase) }}">@endif
                 @endif
             </div>
-            <div style="font-size:8.5px;margin-top:2px">{{ $belge->hekim_adi ?: ($firma?->isyeriHekimi?->ad_soyad ?: '') }}</div>
+            <div style="font-size:8.5px;margin-top:2px">
+                {{ $belge->hekim_adi ?: ($firma?->isyeriHekimi?->ad_soyad ?: '') }}
+                @if ($firma?->isyeriHekimi?->sertifika_no)<br><span style="font-size:7.5px;color:#555">Belge No: {{ $firma->isyeriHekimi->sertifika_no }}</span>@endif
+            </div>
         </td>
-        <td>
+        <td style="width:33.33%">
             <div class="rol">Çalışan (Bilgilendirildi)</div>
             <div class="kutu2"></div>
             <div style="font-size:8.5px;margin-top:2px">{{ $belge->calisan_ad_soyad }}</div>
         </td>
+        <td style="width:33.33%">
+            <div class="rol">İşveren / İşveren Vekili (Tebellüğ)</div>
+            <div class="kutu2"></div>
+            <div style="font-size:8.5px;margin-top:2px">{{ $firma?->isveren_vekili ?: ($firma?->isveren_ad ?: '') }}</div>
+        </td>
     </tr>
 </table>
 
-<p class="yasal">6331 Sayılı İş Sağlığı ve Güvenliği Kanunu Madde 15 ve İşyeri Hekimi ve Diğer Sağlık Personelinin Görev, Yetki, Sorumluluk ve Eğitimleri Hakkında Yönetmelik uyarınca düzenlenmiştir. Düzenleme: {{ $belge->belge_tarihi?->format('d.m.Y') ?? now()->format('d.m.Y') }}</p>
+<p class="yasal">
+    <strong>TIBBİ GİZLİLİK (6331 SK m.15/5 &amp; 6698 KVKK m.6):</strong> Bu belgede yer alan sağlık bilgileri gizlidir; yalnızca işyeri hekimi ve kanunen yetkili mercilerce muhafaza edilir.<br>
+    6331 Sayılı İş Sağlığı ve Güvenliği Kanunu Madde 15 ve İşyeri Hekimi ve Diğer Sağlık Personelinin Görev, Yetki, Sorumluluk ve Eğitimleri Hakkında Yönetmelik uyarınca düzenlenmiştir. Düzenleme: {{ $belge->belge_tarihi?->format('d.m.Y') ?? now()->format('d.m.Y') }}
+</p>
 
 </body>
 </html>

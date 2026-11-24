@@ -115,14 +115,16 @@
 </div>
 
 @foreach (($tutanak->fotograflar ?? []) as $i => $foto)
-    <div class="sayfa foto-sayfa">
-        <div class="baslik">
-            <h1>İSG CEZA VE TEBLİĞ TUTANAĞI</h1>
-            <div style="font-size:11px">{{ $firma?->unvan }} — Tutanak No: {{ $tutanak->tutanak_no }}</div>
+    @if ($foto && is_file(storage_path('app/public/'.$foto)))
+        <div class="sayfa foto-sayfa">
+            <div class="baslik">
+                <h1>İSG CEZA VE TEBLİĞ TUTANAĞI</h1>
+                <div style="font-size:11px">{{ $firma?->unvan }} — Tutanak No: {{ $tutanak->tutanak_no }}</div>
+            </div>
+            <div class="baslik2">FOTOĞRAF {{ $i + 1 }}</div>
+            <img src="{{ storage_path('app/public/'.$foto) }}">
         </div>
-        <div class="baslik2">FOTOĞRAF {{ $i + 1 }}</div>
-        <img src="{{ storage_path('app/public/'.$foto) }}">
-    </div>
+    @endif
 @endforeach
 
 </body>

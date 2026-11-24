@@ -109,8 +109,13 @@
             <td class="orta sonuc-{{ $c['sonuc'] ?? '' }}">{{ config('isg.saha_denetimi.sonuc_secenekleri.'.($c['sonuc'] ?? ''), '-') }}</td>
             <td class="foto">
                 @forelse ($fotolar as $yol)
-                    @if (is_file(storage_path('app/public/'.$yol)))
-                        <img class="satir-foto" src="{{ storage_path('app/public/'.$yol) }}">
+                    @php
+                        $satirFotoYol = is_file(storage_path('app/public/'.$yol))
+                            ? storage_path('app/public/'.$yol)
+                            : (\Illuminate\Support\Facades\Storage::disk('public')->exists($yol) ? \Illuminate\Support\Facades\Storage::disk('public')->path($yol) : null);
+                    @endphp
+                    @if ($satirFotoYol)
+                        <img class="satir-foto" src="{{ $satirFotoYol }}">
                     @endif
                 @empty
                     -
@@ -178,12 +183,25 @@
 </div>
 
 @foreach ($denetim->kanitlar() as $k)
-    <div class="kanit">
-        <h2>FOTOĞRAF KANITLARI</h2>
-        <div class="alt-baslik">Kanıt {{ $k['sira'] }} · Madde {{ $k['kod'] }}</div>
-        <img src="{{ storage_path('app/public/'.$k['yol']) }}">
-        <div class="kimlik">Kanıt kimliği: {{ $k['kimlik'] }}</div>
-    </div>
+    @php
+        $kanitYol = null;
+        if (! empty($k['yol'])) {
+            $gercek = storage_path('app/public/'.$k['yol']);
+            if (is_file($gercek)) {
+                $kanitYol = $gercek;
+            } elseif (\Illuminate\Support\Facades\Storage::disk('public')->exists($k['yol'])) {
+                $kanitYol = \Illuminate\Support\Facades\Storage::disk('public')->path($k['yol']);
+            }
+        }
+    @endphp
+    @if ($kanitYol)
+        <div class="kanit">
+            <h2>FOTOĞRAF KANITLARI</h2>
+            <div class="alt-baslik">Kanıt {{ $k['sira'] }} · Madde {{ $k['kod'] }}</div>
+            <img src="{{ $kanitYol }}">
+            <div class="kimlik">Kanıt kimliği: {{ $k['kimlik'] }}</div>
+        </div>
+    @endif
 @endforeach
 
 </body>

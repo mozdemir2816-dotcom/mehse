@@ -95,7 +95,7 @@ class MuayeneFormu extends Model
             'vital' => ['boy' => null, 'kilo' => null, 'kan_basinci' => null, 'nabiz' => null],
             'fizik' => collect(self::FIZIK_SISTEMLERI)->map(fn () => null)->all(),
             'lab' => collect(self::LAB_GRUPLARI)->map(fn () => ['tarih' => null, 'sonuc' => null])->all(),
-            'kanaat' => ['gorev' => null, 'gece' => true, 'yuksekte' => false],
+            'kanaat' => ['gorev' => null, 'gece' => false, 'yuksekte' => false],
             'hekim' => ['diploma' => null, 'belge_no' => null],
         ];
     }

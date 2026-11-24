@@ -511,14 +511,14 @@
 <table class="tablo" style="margin-top:10pt">
     <tr>
         <td class="orta" style="width:33%;height:80pt">
-            @if ($imzali && $hz['kase'])<img src="{{ storage_path('app/public/'.$hz['kase']) }}" style="max-height:38pt"><br>@endif
-            @if ($imzali && $hz['imza'])<img src="{{ storage_path('app/public/'.$hz['imza']) }}" style="max-height:30pt"><br>@endif
+            @if ($imzali && ! empty($hz['kase']) && is_file(storage_path('app/public/'.$hz['kase'])))<img src="{{ storage_path('app/public/'.$hz['kase']) }}" style="max-height:38pt"><br>@endif
+            @if ($imzali && ! empty($hz['imza']) && is_file(storage_path('app/public/'.$hz['imza'])))<img src="{{ storage_path('app/public/'.$hz['imza']) }}" style="max-height:30pt"><br>@endif
             <b>Hazırlayan</b><br>{{ $hz['ad'] }}@if ($hz['unvan'])<br>{{ $hz['unvan'] }}@endif
         </td>
         <td class="orta" style="width:33%">
-            @if ($imzali && $hekim?->kase_gorseli)<img src="{{ storage_path('app/public/'.$hekim->kase_gorseli) }}" style="max-height:38pt"><br>@endif
-            @if ($imzali && $hekim?->imza_gorseli)<img src="{{ storage_path('app/public/'.$hekim->imza_gorseli) }}" style="max-height:30pt"><br>@endif
-            <b>İşyeri Hekimi</b><br>(İmza – Kaşe)
+            @if ($imzali && $hekim?->kase_gorseli && is_file(storage_path('app/public/'.$hekim->kase_gorseli)))<img src="{{ storage_path('app/public/'.$hekim->kase_gorseli) }}" style="max-height:38pt"><br>@endif
+            @if ($imzali && $hekim?->imza_gorseli && is_file(storage_path('app/public/'.$hekim->imza_gorseli)))<img src="{{ storage_path('app/public/'.$hekim->imza_gorseli) }}" style="max-height:30pt"><br>@endif
+            <b>İşyeri Hekimi</b><br>{{ $hekim?->ad_soyad ?: '(İmza – Kaşe)' }}@if ($hekim?->sertifika_no)<br>Belge No: {{ $hekim->sertifika_no }}@endif
         </td>
         <td class="orta">
             <b>Onaylayan — İşveren / İşveren Vekili</b><br>{{ $d['isveren'] ?? $d['isveren_vekili'] }}<br>(İmza – Kaşe – Onay Tarihi)

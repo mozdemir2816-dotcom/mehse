@@ -631,6 +631,9 @@ class SahaDenetimiTest extends TestCase
 
     public function test_pdf_madde_tablosunda_satir_ici_foto_gosterilir(): void
     {
+        Storage::fake('public');
+        Storage::disk('public')->put('saha-denetimi-foto/kanit.jpg', 'fake-jpg');
+
         $firma = Firma::factory()->for($this->uzman)->create();
         $d = SahaDenetimi::create([
             'firma_id' => $firma->id,

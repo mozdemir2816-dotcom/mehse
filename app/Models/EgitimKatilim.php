@@ -44,9 +44,11 @@ class EgitimKatilim extends Model
 
     public function basliklarEtiketi(): string
     {
-        return $this->baslik_anahtari === 'genel'
-            ? 'İş Sağlığı ve Güvenliği'
-            : (config('isg.egitim.ozel_basliklar.'.$this->baslik_anahtari.'.ad') ?? $this->baslik_anahtari);
+        if (! $this->baslik_anahtari || $this->baslik_anahtari === 'genel') {
+            return 'İş Sağlığı ve Güvenliği';
+        }
+
+        return (string) (config('isg.egitim.ozel_basliklar.'.$this->baslik_anahtari.'.ad') ?? $this->baslik_anahtari);
     }
 
     public function katilimciSayisi(): int

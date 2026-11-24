@@ -46,7 +46,7 @@
                         &nbsp;|&nbsp; <strong>Çalışan:</strong> {{ $calisan }} kişi
                         @if ($firma->sgk_sicil_no) &nbsp;|&nbsp; <strong>SGK:</strong> {{ $firma->sgk_sicil_no }} @endif
                         @if ($firma->nace_kodu) &nbsp;|&nbsp; <strong>NACE:</strong> {{ $firma->nace_kodu }} @endif
-                        @if ($firma->isg_katip_sozlesme_no) &nbsp;|&nbsp; <strong>İSG-KATİP:</strong> {{ $firma->isg_katip_sozlesme_no }} @endif
+                        @if ($firma->katip_no) &nbsp;|&nbsp; <strong>İSG-KATİP:</strong> {{ $firma->katip_no }} @endif
                     </div>
                     <div class="alt">
                         <strong>İSG Uzmanı:</strong> {{ $firma->igu_hizmeti_yok ? 'Kapsam Dışı / Muaf' : ($firma->igu?->ad_soyad ? $firma->igu->ad_soyad.($firma->igu->sertifika_no ? ' (Belge: '.$firma->igu->sertifika_no.')' : '') : 'Atanmadı') }}

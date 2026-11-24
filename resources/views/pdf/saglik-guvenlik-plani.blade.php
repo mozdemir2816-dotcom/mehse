@@ -9,8 +9,10 @@
     .baslik { text-align: center; border-bottom: 3px double #0f172a; padding-bottom: 8px; margin-bottom: 12px; }
     .baslik h1 { font-size: 14px; margin: 0 0 3px; color: #0f172a; }
     .baslik .alt { font-size: 9.5px; color: #475569; }
-    h2 { font-size: 11px; margin: 12px 0 5px; padding: 4px 8px; background: #0f172a; color: #fff; border-radius: 3px; }
+    h2 { font-size: 11px; margin: 12px 0 5px; padding: 4px 8px; background: #0f172a; color: #fff; border-radius: 3px; page-break-after: avoid; }
     table.kunye, table.liste { width: 100%; border-collapse: collapse; margin-bottom: 10px; font-size: 9.2px; }
+    table.liste thead { display: table-header-group; }
+    table.liste tr { page-break-inside: avoid; }
     table.kunye td, table.liste th, table.liste td { border: 1px solid #94a3b8; padding: 4px 6px; vertical-align: top; }
     table.kunye td.etiket { background: #f1f5f9; font-weight: bold; width: 23%; }
     table.liste th { background: #e2e8f0; text-align: left; font-weight: bold; }
@@ -34,8 +36,12 @@
     <h2>1. YAPI İŞYERİ / ŞANTİYE KÜNYESİ VE EK-3 BİLDİRİM ÖZETİ</h2>
     <table class="kunye">
         <tr>
-            <td class="etiket">İşveren / Firma Ünvanı</td><td>{{ $firma->unvan }}</td>
+            <td class="etiket">İşveren / Firma Unvanı</td><td>{{ $firma->unvan }}</td>
+            <td class="etiket">Doküman No / Düzenleme Tarihi</td><td>{{ $veri['dokuman_no'] ?? 'SGP-001' }} · {{ $veri['duzenleme_tarihi'] ?? now()->format('d.m.Y') }}</td>
+        </tr>
+        <tr>
             <td class="etiket">SGK Sicil / NACE</td><td>{{ $firma->sgk_sicil_no ?: '—' }} / {{ $firma->nace_kodu ?: '—' }}</td>
+            <td class="etiket">Tehlike Sınıfı</td><td>{{ $firma->tehlikeSinifiEtiketi() }}</td>
         </tr>
         <tr>
             <td class="etiket">Proje / Şantiye Adı</td><td>{{ $veri['santiye_adi'] }}</td>
@@ -49,7 +55,7 @@
             <td class="etiket">Sağlık ve Güvenlik Koordinatörü</td>
             <td>Hazırlık: {{ $veri['hazirlik_koordinatoru'] }} / Uygulama: {{ $veri['uygulama_koordinatoru'] }}</td>
             <td class="etiket">İSG Profesyonelleri</td>
-            <td>İGU: {{ $firma->igu?->ad_soyad ?: '—' }} | İH: {{ $firma->isyeriHekimi?->ad_soyad ?: '—' }}</td>
+            <td>İGU: {{ $firma->igu?->ad_soyad ?: '—' }}{{ $firma->igu?->sertifika_no ? ' ('.$firma->igu->sertifika_no.')' : '' }} | İH: {{ $firma->isyeriHekimi?->ad_soyad ?: '—' }}{{ $firma->isyeriHekimi?->sertifika_no ? ' ('.$firma->isyeriHekimi->sertifika_no.')' : '' }}</td>
         </tr>
         <tr>
             <td class="etiket">Tahmini Süre / Azami Çalışan</td>
@@ -73,12 +79,15 @@
 
     <h2>2. YAPI İŞ FAZLARI, ÖZEL RİSK TAŞIYAN İŞLER (EK-2) VE GÜVENLİK TEDBİRLERİ</h2>
     <table class="liste">
+        <thead>
         <tr>
             <th style="width:24%">Yapı İş Fazı / İş Kalemi</th>
             <th style="width:23%">Başlıca Tehlike ve Riskler</th>
             <th style="width:35%">Uygulanacak Teknik Önlem ve Saha Kuralları</th>
             <th style="width:18%">Zorunlu KKD</th>
         </tr>
+        </thead>
+        <tbody>
         @foreach ($fazlar as $f)
             <tr>
                 <td><strong>{{ $f['baslik'] }}</strong></td>
@@ -87,45 +96,54 @@
                 <td>{{ $f['kkd'] }}</td>
             </tr>
         @endforeach
+        </tbody>
     </table>
 
     @if ($taseronlar->isNotEmpty())
         <h2>3. ŞANTİYEDE FAALİYET GÖSTEREN ALT İŞVERENLER (TAŞERON KOORDİNASYONU)</h2>
         <table class="liste">
+            <thead>
             <tr>
-                <th>Alt İşveren Ünvanı</th>
+                <th>Alt İşveren Unvanı</th>
                 <th>Yapılan İş / Faaliyet</th>
                 <th>Yetkili / İletişim</th>
                 <th>Sözleşme & Evrak Uyumu</th>
             </tr>
+            </thead>
+            <tbody>
             @foreach ($taseronlar as $t)
                 <tr>
                     <td><strong>{{ $t->unvan }}</strong></td>
-                    <td>{{ $t->yapilan_is ?: '—' }}</td>
-                    <td>{{ $t->yetkili_ad_soyad ?: '—' }} {{ $t->telefon ? '('.$t->telefon.')' : '' }}</td>
+                    <td>{{ $t->faaliyet ?: '—' }}</td>
+                    <td>{{ $t->yetkili ?: '—' }} {{ $t->telefon ? '('.$t->telefon.')' : '' }}</td>
                     <td>SGK İşe Giriş, İSG Eğitimi, Periyodik Muayene (EK-2), MYK ve KKD Zimmet kontrolü zorunludur.</td>
                 </tr>
             @endforeach
+            </tbody>
         </table>
     @endif
 
     @if ($oncelikliRiskler->isNotEmpty())
         <h2>4. FİRMA RİSK DEĞERLENDİRMESİNDEN AKTARILAN ÖNCELİKLİ RİSK MADDELERİ</h2>
         <table class="liste">
+            <thead>
             <tr>
                 <th style="width:18%">Bölüm / Faaliyet</th>
                 <th style="width:28%">Tehlike ve Risk</th>
                 <th style="width:8%">Skor</th>
                 <th style="width:46%">Kararlaştırılan Düzeltici / Önleyici Faaliyet</th>
             </tr>
+            </thead>
+            <tbody>
             @foreach ($oncelikliRiskler as $m)
                 <tr>
                     <td>{{ $m->bolum ?: $m->faaliyet ?: 'Saha Geneli' }}</td>
                     <td><strong>{{ $m->tehlike }}</strong> — {{ $m->risk }}</td>
-                    <td style="text-align:center;font-weight:bold">{{ (int) $m->olasilik * (int) $m->siddet }}</td>
+                    <td style="text-align:center;font-weight:bold">{{ $m->puan ?? round((float) $m->olasilik * (float) ($m->frekans ?: 1) * (float) $m->siddet, 1) }}</td>
                     <td>{{ $m->oneri ?: $m->mevcut_onlem }}</td>
                 </tr>
             @endforeach
+            </tbody>
         </table>
     @endif
 

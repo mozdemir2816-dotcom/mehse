@@ -79,20 +79,30 @@ class FirmaEvrakPaketi
             );
         }
 
-        $zipYolu = tempnam(sys_get_temp_dir(), 'mehse-paket').'.zip';
+        $hamTemp = tempnam(sys_get_temp_dir(), 'mehse-paket');
+        @unlink($hamTemp);
+        $zipYolu = $hamTemp.'.zip';
         $zip = new ZipArchive;
-        $zip->open($zipYolu, ZipArchive::CREATE | ZipArchive::OVERWRITE);
+        if ($zip->open($zipYolu, ZipArchive::CREATE | ZipArchive::OVERWRITE) !== true) {
+            throw new \RuntimeException('Firma evrak paketi ZIP oluşturulamadı.');
+        }
 
-        foreach ($dosyalar as $ad => $icerik) {
-            $zip->addFromString($ad, $icerik);
+        if ($dosyalar === []) {
+            $zip->addFromString('BILGI.txt', "Seçilen kapsamda indirilecek evrak bulunamadı.\r\n");
+        } else {
+            foreach ($dosyalar as $ad => $icerik) {
+                $zip->addFromString($ad, $icerik);
+            }
         }
 
         $zip->close();
 
         return response()->streamDownload(function () use ($zipYolu) {
-            echo file_get_contents($zipYolu);
-            @unlink($zipYolu);
-        }, Str::slug($firma->unvan).'-evrak-paketi.zip');
+            if (is_file($zipYolu)) {
+                readfile($zipYolu);
+                @unlink($zipYolu);
+            }
+        }, Str::slug($firma->unvan).'-evrak-paketi.zip', ['Content-Type' => 'application/zip']);
     }
 
     private static function icerik(StreamedResponse $yanit): string

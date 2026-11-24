@@ -34,11 +34,12 @@
 <table class="kunye">
     <tr>
         <td class="e">İşyeri</td><td>{{ $firma?->unvan ?: '—' }}</td>
+        <td class="e">SGK Sicil No</td><td>{{ $firma?->sgk_sicil_no ?: '—' }}</td>
         <td class="e">Tehlike Sınıfı</td><td>{{ $firma?->tehlikeSinifiEtiketi() ?? '—' }}</td>
         <td class="e">Liste Tarihi</td><td>{{ now()->format('d.m.Y') }}</td>
     </tr>
     @if ($gozetim->genel_not)
-        <tr><td class="e">Not</td><td colspan="5">{{ $gozetim->genel_not }}</td></tr>
+        <tr><td class="e">Not</td><td colspan="7">{{ $gozetim->genel_not }}</td></tr>
     @endif
 </table>
 
@@ -51,10 +52,9 @@
             <th>Sağlık Tetkiki</th>
             <th style="width:60px">Tetkik Tarihi</th>
             <th style="width:60px">Sonraki Tetkik</th>
-            <th style="width:90px">Sonuç</th>
+            <th style="width:90px">Uygunluk / Durum</th>
             <th style="width:70px">Rapor No</th>
-            <th style="width:70px">Kurşun (µg/dL)</th>
-            <th>Açıklama</th>
+            <th>Takip Notu</th>
         </tr>
     </thead>
     <tbody>
@@ -73,25 +73,23 @@
                 <td class="{{ $gecmis ? 'gecti' : '' }}">{{ $sonraki ? $sonraki->format('d.m.Y') : '—' }}</td>
                 <td class="s-{{ $s['sonuc'] ?? 'bekliyor' }}">{{ $sonuclar[$s['sonuc'] ?? 'bekliyor'] ?? '' }}</td>
                 <td>{{ $s['rapor_no'] ?? '—' }}</td>
-                <td>{{ $s['kursun_deger'] ?? '—' }}</td>
-                <td>{{ $s['not'] ?? '' }}</td>
+                <td>{{ ! empty($s['kursun_deger']) ? 'Biyolojik izlem kaydı hekim dosyasında (6331 m.15/5)' : ($s['not'] ?? '') }}</td>
             </tr>
         @empty
-            <tr><td colspan="10" style="text-align:center;color:#888">Kayıt girilmemiş.</td></tr>
+            <tr><td colspan="9" style="text-align:center;color:#888">Kayıt girilmemiş.</td></tr>
         @endforelse
     </tbody>
 </table>
 
 <p class="yasal">
-    İşe giriş ve periyodik muayeneler işyeri hekimi tarafından EK-2 formuna uygun yapılır.
-    Periyodik muayene aralığı: az tehlikeli en geç 5, tehlikeli 3, çok tehlikeli 1 yıl (hekim
-    daha sık isteyebilir). Kırmızı "Sonraki Tetkik" tarihi geçmiş; tetkik yenilenmelidir.
+    <strong>TIBBİ GİZLİLİK (6331 SK m.15/5 &amp; 6698 KVKK m.6):</strong> Bu çizelge yalnızca idari periyodik takip ve çalışma elverişliliği içindir; tanı ve biyolojik laboratuvar ölçüm değerleri işyeri hekiminin gizli sağlık dosyasında muhafaza edilir.<br>
+    İşe giriş ve periyodik muayeneler işyeri hekimi tarafından EK-2 formuna uygun yapılır. Periyodik muayene aralığı: az tehlikeli en geç 5, tehlikeli 3, çok tehlikeli 1 yıl (hekim daha sık isteyebilir). Kırmızı "Sonraki Tetkik" tarihi geçmiş; tetkik yenilenmelidir.
 </p>
 
 <table class="imza">
     <tr>
-        <td>İşyeri Hekimi</td>
-        <td>İşveren / İşveren Vekili</td>
+        <td>İşyeri Hekimi<br>{{ $firma?->isyeriHekimi?->ad_soyad ?: '' }}{{ $firma?->isyeriHekimi?->sertifika_no ? ' (Belge No: '.$firma->isyeriHekimi->sertifika_no.')' : '' }}<br>İmza / Kaşe</td>
+        <td>İşveren / İşveren Vekili<br>{{ $firma?->isveren_vekili ?: ($firma?->isveren_ad ?: '') }}<br>İmza / Kaşe</td>
     </tr>
 </table>
 

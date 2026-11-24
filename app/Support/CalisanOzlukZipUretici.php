@@ -19,9 +19,13 @@ class CalisanOzlukZipUretici
     {
         $calisan->loadMissing(['firma', 'egitimKayitlari', 'muayeneFormlari', 'kkdZimmetleri']);
 
-        $gecici = tempnam(sys_get_temp_dir(), 'mehse_ozluk_').'.zip';
+        $hamTemp = tempnam(sys_get_temp_dir(), 'mehse_ozluk_');
+        @unlink($hamTemp);
+        $gecici = $hamTemp.'.zip';
         $zip = new ZipArchive;
-        $zip->open($gecici, ZipArchive::CREATE | ZipArchive::OVERWRITE);
+        if ($zip->open($gecici, ZipArchive::CREATE | ZipArchive::OVERWRITE) !== true) {
+            throw new \RuntimeException('Özlük ZIP dosyası oluşturulamadı.');
+        }
 
         $roller = collect($calisan->rol_etiketleri ?? [])
             ->map(fn ($r) => Calisan::ROL_ETIKETLERI[$r] ?? $r)
@@ -30,12 +34,14 @@ class CalisanOzlukZipUretici
         $satirlar = [
             'MEHSE İSG — ÇALIŞAN ÖZLÜK DOSYASI ÖZETİ',
             '========================================',
+            'GİZLİLİK NOTU (6331 SK m.15/5 & 6698 KVKK): Bu dosya çalışana ait kişisel ve özel',
+            'nitelikli sağlık verilerini içerebilir; yalnızca yetkili kişilerce muhafaza edilir.',
+            '----------------------------------------',
             'İşyeri        : '.($calisan->firma?->unvan ?: '—'),
             'Ad Soyad      : '.$calisan->ad_soyad,
             'T.C. Kimlik   : '.($calisan->maskeliTc() ?: '—'),
             'Görev / Şube  : '.trim(($calisan->gorev ?: '—').' / '.($calisan->sube ?: '—')),
             'İşe Giriş     : '.($calisan->ise_giris?->format('d.m.Y') ?: '—'),
-            'Kan Grubu     : '.($calisan->kan_grubu ?: '—'),
             'İSG Rolleri   : '.($roller ?: '—'),
             'MYK Belge No  : '.($calisan->myk_belge_no ?: '—'),
             '',
@@ -58,9 +64,9 @@ class CalisanOzlukZipUretici
         }
 
         $satirlar[] = '';
-        $satirlar[] = '--- EK-2 MUAYENE KAYITLARI ('.$calisan->muayeneFormlari->count().') ---';
+        $satirlar[] = '--- EK-2 MUAYENE TAKİP KAYITLARI ('.$calisan->muayeneFormlari->count().' · Tıbbi detaylar gizlidir — 6331 m.15/5) ---';
         foreach ($calisan->muayeneFormlari as $mf) {
-            $satirlar[] = '• '.($mf->muayene_tarihi?->format('d.m.Y') ?: '—').' · '.($mf->sonuc ?: 'Kayıtlı');
+            $satirlar[] = '• '.($mf->muayene_tarihi?->format('d.m.Y') ?: '—').' · '.($mf->muayeneTuruEtiketi()).' · Kayıtlı';
         }
 
         $satirlar[] = '';
@@ -71,17 +77,22 @@ class CalisanOzlukZipUretici
 
         $zip->addFromString('00_Ozluk_Ozeti.txt', implode("\r\n", $satirlar));
 
-        // Arşivde bu çalışanın adıyla kayıtlı dosyalar varsa pakete dahil et
-        $arsivler = ArsivDosya::query()
-            ->where('firma_id', $calisan->firma_id)
-            ->where('kisi_adi', 'like', '%'.$calisan->ad_soyad.'%')
-            ->get();
+        // KVKK m.12 güvenliği: yalnızca ad_soyad doluysa ve TAM eşleşen kayıtlar dahil edilir (LIKE '%...%' yasak!)
+        $tamAd = trim((string) $calisan->ad_soyad);
+        $arsivler = $tamAd !== ''
+            ? ArsivDosya::query()
+                ->where('firma_id', $calisan->firma_id)
+                ->whereRaw('LOWER(TRIM(kisi_adi)) = ?', [mb_strtolower($tamAd, 'UTF-8')])
+                ->get()
+            : collect();
 
         foreach ($arsivler as $idx => $a) {
+            $guvenliAd = basename(str_replace('\\', '/', (string) ($a->dosya_adi ?: $a->dosya_yolu)));
+            $guvenliAd = preg_replace('/[^\p{L}\p{N}._\-\s]/u', '_', $guvenliAd) ?: 'belge.pdf';
             if ($a->dosya_yolu && Storage::disk('local')->exists($a->dosya_yolu)) {
-                $zip->addFile(Storage::disk('local')->path($a->dosya_yolu), sprintf('Belgeler/%02d_%s', $idx + 1, $a->dosya_adi ?: basename($a->dosya_yolu)));
+                $zip->addFile(Storage::disk('local')->path($a->dosya_yolu), sprintf('Belgeler/%02d_%s', $idx + 1, $guvenliAd));
             } elseif ($a->dosya_yolu && Storage::disk('public')->exists($a->dosya_yolu)) {
-                $zip->addFile(Storage::disk('public')->path($a->dosya_yolu), sprintf('Belgeler/%02d_%s', $idx + 1, $a->dosya_adi ?: basename($a->dosya_yolu)));
+                $zip->addFile(Storage::disk('public')->path($a->dosya_yolu), sprintf('Belgeler/%02d_%s', $idx + 1, $guvenliAd));
             }
         }
 

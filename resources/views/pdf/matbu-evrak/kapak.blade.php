@@ -21,7 +21,7 @@
 <body>
 <table class="antet">
     <tr>
-        @if ($logo)<td class="logo"><img src="{{ $logo }}"></td>@endif
+        @if ($logo && is_file((string) $logo))<td class="logo"><img src="{{ $logo }}"></td>@endif
         <td class="baslik">
             <h1>İSG EKİPMAN VE KİMYASAL EVRAK PAKETİ</h1>
             <div>{{ $firma->unvan }}</div>

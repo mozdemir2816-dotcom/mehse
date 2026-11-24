@@ -14,7 +14,7 @@ class SaglikGozetimiUretici
 {
     public static function pdf(SaglikGozetimi $gozetim): StreamedResponse
     {
-        $gozetim->loadMissing('firma');
+        $gozetim->loadMissing('firma.isyeriHekimi');
 
         $pdf = Pdf::loadView('pdf.saglik-gozetimi', [
             'gozetim' => $gozetim,
@@ -23,8 +23,15 @@ class SaglikGozetimiUretici
             'sonuclar' => config('isg.saglik_tetkik.sonuclar'),
         ])->setPaper('a4', 'landscape');
 
+        $dompdf = $pdf->getDomPDF();
+        $dompdf->render();
+        $dompdf->getCanvas()->page_script(function ($pageNumber, $pageCount, $canvas, $fontMetrics): void {
+            $font = $fontMetrics->getFont('DejaVu Sans', 'normal');
+            $canvas->text(730, 578, "Sayfa {$pageNumber} / {$pageCount}", $font, 7.5, [0.35, 0.4, 0.48]);
+        });
+
         $ad = 'saglik-gozetimi-'.Str::slug($gozetim->firma?->unvan ?? 'firma').'.pdf';
 
-        return response()->streamDownload(fn () => print ($pdf->output()), $ad);
+        return response()->streamDownload(fn () => print ($dompdf->output()), $ad);
     }
 }

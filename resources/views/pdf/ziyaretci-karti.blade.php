@@ -40,7 +40,7 @@
             <table class="bilgi">
                 <tr><td class="k">Ziyaret amacı</td><td>{{ $z->ziyaret_amaci ?: '—' }}</td></tr>
                 <tr><td class="k">Ziyaret edilen</td><td>{{ $z->ziyaret_edilen ?: '—' }}</td></tr>
-                <tr><td class="k">Geçerlilik</td><td>{{ $z->gecerlilik_baslangic->format('d.m.Y H:i') }}<br>{{ $z->gecerlilik_bitis->format('d.m.Y H:i') }}</td></tr>
+                <tr><td class="k">Geçerlilik</td><td>{{ $z->gecerlilik_baslangic?->format('d.m.Y H:i') ?: '—' }}<br>{{ $z->gecerlilik_bitis?->format('d.m.Y H:i') ?: '—' }}</td></tr>
                 <tr><td class="k">Verilen KKD</td><td>{{ $z->verilen_kkd ?: '—' }}</td></tr>
                 <tr><td class="k">İSG bilgilendirme</td><td>{{ $z->isg_bilgilendirme ? 'Yapıldı' : 'Yapılmadı' }}</td></tr>
             </table>

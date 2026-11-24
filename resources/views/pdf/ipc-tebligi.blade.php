@@ -75,8 +75,8 @@
     <table class="imza">
         <tr>
             <td>
-                @if ($tebligi->hazirlayan_kase)
-                    @if ($imzali ?? true)<img src="{{ storage_path('app/public/'.$tebligi->hazirlayan_kase) }}">@endif
+                @if (($imzali ?? true) && $tebligi->hazirlayan_kase && is_file(storage_path('app/public/'.$tebligi->hazirlayan_kase)))
+                    <img src="{{ storage_path('app/public/'.$tebligi->hazirlayan_kase) }}">
                 @endif
                 İSG Uzmanı<br>(Hazırlayan – Kaşe)
             </td>

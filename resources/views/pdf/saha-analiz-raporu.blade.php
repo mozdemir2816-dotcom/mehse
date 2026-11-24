@@ -73,7 +73,7 @@
                 <td class="orta">{{ $i + 1 }}</td>
                 <td>{{ $b['bina_bolge'] ?? '—' }}</td>
                 <td>
-                    @if (! empty($b['foto_yolu']))
+                    @if (! empty($b['foto_yolu']) && is_file(storage_path('app/public/'.$b['foto_yolu'])))
                         <img src="{{ storage_path('app/public/'.$b['foto_yolu']) }}">
                     @endif
                 </td>
@@ -98,7 +98,7 @@
 
     <div class="imza">
         <div class="baslik">İŞ GÜVENLİĞİ UZMANI</div>
-        @if (($imzali ?? true) && $rapor->gozetim_yapan_kase)
+        @if (($imzali ?? true) && $rapor->gozetim_yapan_kase && is_file(storage_path('app/public/'.$rapor->gozetim_yapan_kase)))
             <img src="{{ storage_path('app/public/'.$rapor->gozetim_yapan_kase) }}">
         @endif
         İş Güvenliği Uzmanı<br>Kaşe / İmza

@@ -134,18 +134,22 @@ class SaglikGuvenlikPlaniUretici
             ->first();
 
         $oncelikliRiskler = $sonRisk
-            ? $sonRisk->maddeler->sortByDesc(fn ($m) => (int) $m->olasilik * (int) $m->siddet)->take(12)->values()
+            ? $sonRisk->maddeler->sortByDesc(fn ($m) => (float) ($m->puan ?? ((float) $m->olasilik * (float) ($m->frekans ?: 1) * (float) $m->siddet)))->take(12)->values()
             : collect();
+
+        $isverenAd = $firma->isveren_vekili ?: ($firma->isveren_ad ?: '—');
 
         $pdf = Pdf::loadView('pdf.saglik-guvenlik-plani', [
             'firma' => $firma,
             'veri' => [
-                'santiye_adi' => $veri['santiye_adi'] ?: ($firma->unvan.' Şantiyesi'),
-                'santiye_adresi' => $veri['santiye_adresi'] ?: ($firma->adres ?: $firma->il),
-                'proje_muduru' => $veri['proje_muduru'] ?: ($firma->isveren_ad_soyad ?: '—'),
-                'hazirlik_koordinatoru' => $veri['hazirlik_koordinatoru'] ?: ($firma->igu?->ad_soyad ?: '—'),
-                'uygulama_koordinatoru' => $veri['uygulama_koordinatoru'] ?: ($firma->igu?->ad_soyad ?: '—'),
-                'baslangic_tarihi' => $veri['baslangic_tarihi'] ?: now()->format('d.m.Y'),
+                'santiye_adi' => ! empty($veri['santiye_adi']) ? $veri['santiye_adi'] : ($firma->unvan.' Şantiyesi'),
+                'santiye_adresi' => ! empty($veri['santiye_adresi']) ? $veri['santiye_adresi'] : ($firma->adres ?: $firma->il),
+                'proje_muduru' => ! empty($veri['proje_muduru']) ? $veri['proje_muduru'] : $isverenAd,
+                'hazirlik_koordinatoru' => ! empty($veri['hazirlik_koordinatoru']) ? $veri['hazirlik_koordinatoru'] : ($firma->igu?->ad_soyad ?: '—'),
+                'uygulama_koordinatoru' => ! empty($veri['uygulama_koordinatoru']) ? $veri['uygulama_koordinatoru'] : ($firma->igu?->ad_soyad ?: '—'),
+                'baslangic_tarihi' => ! empty($veri['baslangic_tarihi']) ? $veri['baslangic_tarihi'] : now()->format('d.m.Y'),
+                'duzenleme_tarihi' => now()->format('d.m.Y'),
+                'dokuman_no' => 'SGP-'.now()->format('Y').'-'.str_pad((string) $firma->id, 3, '0', STR_PAD_LEFT),
                 'tahmini_sure_gun' => $sureGun,
                 'azami_calisan' => $azamiCalisan,
                 'toplam_yevmiye' => $toplamYevmiye,
@@ -158,9 +162,16 @@ class SaglikGuvenlikPlaniUretici
             'oncelikliRiskler' => $oncelikliRiskler,
         ])->setPaper('a4');
 
-        $dosyaAdi = 'saglik-guvenlik-plani-'.Str::slug($firma->kisaEtiket()).'.pdf';
+        $dompdf = $pdf->getDomPDF();
+        $dompdf->render();
+        $dompdf->getCanvas()->page_script(function ($pageNumber, $pageCount, $canvas, $fontMetrics): void {
+            $font = $fontMetrics->getFont('DejaVu Sans', 'normal');
+            $canvas->text(485, 820, "Sayfa {$pageNumber} / {$pageCount}", $font, 7.5, [0.35, 0.4, 0.48]);
+        });
 
-        return response()->streamDownload(fn () => print ($pdf->output()), $dosyaAdi);
+        $dosyaAdi = 'saglik-guvenlik-plani-'.Str::slug($firma->secimEtiketi()).'.pdf';
+
+        return response()->streamDownload(fn () => print ($dompdf->output()), $dosyaAdi);
     }
 
     /**

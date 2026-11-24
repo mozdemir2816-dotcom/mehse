@@ -220,6 +220,9 @@
 
 {{-- 4. FİZİK MUAYENE SONUÇLARI --}}
 <div class="bolum" style="page-break-before:always;page-break-inside:auto">
+    <div style="font-size:7.5px;color:#475569;border-bottom:1px solid #cbd5e1;padding-bottom:2px;margin-bottom:4px">
+        <strong>EK-2 Devamı</strong> · İşyeri: {{ $firma?->unvan }} · Çalışan: <strong>{{ $form->calisan_ad_soyad }}</strong> · T.C.: {{ $form->calisan_tc ?: '—' }} · Muayene: {{ $tr($form->muayene_tarihi) }}
+    </div>
     <div class="bolum-baslik">4. FİZİK MUAYENE SONUÇLARI</div>
     <div class="bolum-govde">
         <table style="background:#e8f1f8;border:1px solid #bae6fd">
@@ -301,10 +304,19 @@
                             {{ $isaret((bool) $e['kanaat']['gece']) }} Gece ve vardiyalı çalışma koşullarında çalışabilir.<br>
                             {{ $isaret((bool) $e['kanaat']['yuksekte']) }} Yüksekte / tehlikeli işlerde çalışabilir.
                         </div>
+                        @php
+                            $periyotMetni = match ($firma?->tehlike_sinifi) {
+                                'cok_tehlikeli' => 'En geç 1 yılda bir',
+                                'tehlikeli' => 'En geç 3 yılda bir',
+                                'az_tehlikeli' => 'En geç 5 yılda bir',
+                                default => 'Hekim takdirine göre (1/3/5 yıl)',
+                            };
+                        @endphp
                         <table style="margin-top:4px">
                             <tr>
-                                <td class="e" style="width:50%"><span class="etk">Muayene Tarihi</span><span class="deger">{{ $tr($form->muayene_tarihi) }}</span></td>
-                                <td class="e"><span class="etk">Bir Sonraki Periyodik Muayene Tarihi</span><span class="deger">{{ $tr($form->onerilen_kontrol_tarihi) }}</span></td>
+                                <td class="e" style="width:33%"><span class="etk">Muayene Tarihi</span><span class="deger">{{ $tr($form->muayene_tarihi) }}</span></td>
+                                <td class="e" style="width:33%"><span class="etk">Yasal Periyot</span><span class="deger">{{ $periyotMetni }}</span></td>
+                                <td class="e"><span class="etk">Sonraki Muayene</span><span class="deger">{{ $tr($form->onerilen_kontrol_tarihi) }}</span></td>
                             </tr>
                         </table>
                     </div>
@@ -319,10 +331,11 @@
                                 <td><span class="etk">İşyeri Hekimliği Belge No</span><span class="deger">{{ $e['hekim']['belge_no'] }}</span></td>
                             </tr>
                         </table>
-                        @if ($imzali && $form->hekim_kase && is_file(storage_path('app/public/'.$form->hekim_kase)))
+                        @php $hekimKaseVar = $imzali && $form->hekim_kase && is_file(storage_path('app/public/'.$form->hekim_kase)); @endphp
+                        @if ($hekimKaseVar)
                             <div style="text-align:center;margin-top:3px"><img src="{{ storage_path('app/public/'.$form->hekim_kase) }}"></div>
                         @endif
-                        <div class="imza-cizgi" @if ($imzali && $form->hekim_kase) style="margin-top:2px" @endif>İmza / Kaşe</div>
+                        <div class="imza-cizgi" @if ($hekimKaseVar) style="margin-top:2px" @endif>İmza / Kaşe</div>
                     </div>
                 </td>
             </tr>
@@ -330,6 +343,9 @@
 
         <p class="kucuk" style="margin-top:6px;font-style:italic">
             (*) Yapılan muayene sonucunda çalışanın gece veya vardiyalı çalışma koşullarında çalışıp çalışamayacağı ile vücut sağlığını ve bütünlüğünü tamamlayıcı uygun alet, teçhizat vb. bulunması durumunda çalışan için bu koşullarla çalışmaya elverişli olup olmadığı kanaati belirtilecektir.
+        </p>
+        <p class="kucuk" style="margin-top:4px;padding:4px 6px;background:#f8fafc;border:1px solid #cbd5e1;color:#334155">
+            <strong>TIBBİ GİZLİLİK (6331 SK m.15/5 &amp; 6698 KVKK m.6):</strong> Sağlık muayenesi yaptırılan çalışanın özel hayatı ve itibarının korunması açısından bu belgedeki tıbbi bilgiler gizlidir; yalnızca işyeri hekimi tarafından sağlık dosyasında muhafaza edilir ve ilgilinin yazılı rızası olmadan üçüncü kişilerle paylaşılamaz.
         </p>
     </div>
 </div>

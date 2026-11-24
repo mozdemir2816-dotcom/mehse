@@ -15,7 +15,7 @@ class MuayeneFormuUretici
     /** @param  bool  $imzali  false = imzasız (matbu): kaşe/imza görselleri basılmaz */
     public static function pdf(MuayeneFormu $m, bool $imzali = true, ?string $canliImza = null): StreamedResponse
     {
-        $m->loadMissing('firma');
+        $m->loadMissing('firma.isyeriHekimi');
 
         $pdf = Pdf::loadView('pdf.muayene-formu', [
             'imzali' => $imzali,
@@ -24,8 +24,15 @@ class MuayeneFormuUretici
             'canliImza' => $canliImza,
         ])->setPaper('a4');
 
+        $dompdf = $pdf->getDomPDF();
+        $dompdf->render();
+        $dompdf->getCanvas()->page_script(function ($pageNumber, $pageCount, $canvas, $fontMetrics): void {
+            $font = $fontMetrics->getFont('DejaVu Sans', 'normal');
+            $canvas->text(485, 822, "Sayfa {$pageNumber} / {$pageCount}", $font, 7.5, [0.35, 0.4, 0.48]);
+        });
+
         $ad = 'muayene-formu-'.Str::slug($m->calisan_ad_soyad ?: 'calisan').'.pdf';
 
-        return response()->streamDownload(fn () => print ($pdf->output()), $ad);
+        return response()->streamDownload(fn () => print ($dompdf->output()), $ad);
     }
 }

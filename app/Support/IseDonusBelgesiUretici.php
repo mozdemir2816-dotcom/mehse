@@ -15,7 +15,7 @@ class IseDonusBelgesiUretici
     /** @param  bool  $imzali  false = imzasız (matbu): kaşe/imza görselleri basılmaz */
     public static function pdf(IseDonusBelgesi $b, bool $imzali = true): StreamedResponse
     {
-        $b->loadMissing('firma');
+        $b->loadMissing('firma.isyeriHekimi');
 
         $pdf = Pdf::loadView('pdf.ise-donus-belgesi', [
             'imzali' => $imzali,
