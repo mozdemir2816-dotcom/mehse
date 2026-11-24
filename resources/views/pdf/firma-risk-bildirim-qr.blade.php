@@ -43,7 +43,7 @@
         <div class="qr-kutu">
             <img src="{{ $qrDataUri }}" alt="Risk Bildirim QR Kodu" style="width: 210px; height: 210px;">
             <div style="font-size: 9.5px; font-weight: bold; color: #991b1b; margin-top: 4px;">
-                📱 TELEFON KAMERASIYLA OKUTUN
+                TELEFON KAMERASIYLA OKUTUN
             </div>
         </div>
 

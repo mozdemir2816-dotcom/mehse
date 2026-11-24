@@ -104,6 +104,10 @@
                         <td style="width:30%;background:#f7f7f7;font-weight:bold">{{ $k['ad'] }}</td>
                         <td style="width:20%;color:{{ $renk }}">{{ $k['etiket'] }}</td>
                     @endforeach
+                    @if (count($cift) === 1)
+                        <td style="width:30%"></td>
+                        <td style="width:20%"></td>
+                    @endif
                 </tr>
             @endforeach
         </table>
@@ -193,8 +197,10 @@
 
     <table class="imza">
         <tr>
-            <td>{{ $form->onay1_baslik ?: 'Saha Sorumlusu / Formen' }}<br>{{ $form->onay1_ad ?: '—' }}<br>(İmza)</td>
-            <td>{{ $form->onay2_baslik ?: 'İSG Uzmanı / İşveren Vekili' }}<br>{{ $form->onay2_ad ?: '—' }}<br>(İmza)</td>
+            <td style="width:25%"><strong>İşi Talep Eden / Ekip Sorumlusu</strong><br>{{ $form->ekip_lideri ?: '—' }}<br>(İmza)</td>
+            <td style="width:25%"><strong>{{ $form->onay1_baslik ?: '1. Onaycı (Saha Sorumlusu)' }}</strong><br>{{ $form->onay1_ad ?: '—' }}<br>(İmza)</td>
+            <td style="width:25%"><strong>{{ $form->onay2_baslik ?: '2. Onaycı (İGU / İşveren V.)' }}</strong><br>{{ $form->onay2_ad ?: '—' }}<br>(İmza)</td>
+            <td style="width:25%"><strong>İş Bitimi / Saha Güvenli Teslim</strong><br>{{ $form->kapatan ?: '—' }}<br>(Kapanış İmzası)</td>
         </tr>
     </table>
 

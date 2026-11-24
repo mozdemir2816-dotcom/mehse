@@ -10,7 +10,7 @@
     .baslik h1 { font-size: 15px; margin: 0 0 4px; }
     .kunye { width: 100%; border-collapse: collapse; font-size: 10px; margin-bottom: 12px; }
     .kunye td { border: 1px solid #999; padding: 5px 8px; }
-    .kunye td:first-child { background: #f0f0f0; font-weight: bold; width: 22%; }
+    .kunye td:nth-child(odd) { background: #f0f0f0; font-weight: bold; width: 22%; }
     h2 { font-size: 11.5px; margin: 14px 0 5px; color: #b45309; border-bottom: 1px solid #b45309; padding-bottom: 3px; }
     table.liste { width: 100%; border-collapse: collapse; font-size: 9.5px; margin-bottom: 8px; }
     table.liste th, table.liste td { border: 1px solid #999; padding: 4px 6px; text-align: left; }
@@ -20,9 +20,10 @@
     .tutar-kutu td { border: 1px solid #999; padding: 6px 8px; }
     .tutar-kutu td:first-child { background: #f0f0f0; font-weight: bold; width: 55%; }
     .durum { font-weight: bold; }
-    .imza { margin-top: 30px; width: 100%; }
-    .imza td { width: 50%; text-align: center; padding-top: 40px; border-top: 1px solid #111; font-size: 9.5px; }
-    .imza img { max-height: 42px; display: block; margin: 0 auto -34px auto; }
+    .imza { margin-top: 24px; width: 100%; border-collapse: collapse; page-break-inside: avoid; }
+    .imza td { width: 50%; text-align: center; padding: 6px 10px; font-size: 9.5px; vertical-align: bottom; }
+    .imza .alan { height: 42px; border-bottom: 1px solid #111; margin: 0 18px 4px; }
+    .imza img { max-height: 40px; display: block; margin: 0 auto 2px; }
     .yasal { margin-top: 14px; font-size: 8.5px; color: #666; }
 </style>
 </head>
@@ -30,8 +31,9 @@
 <div class="sayfa">
 
     <div class="baslik">
-        <h1>İŞVERENE İDARİ PARA CEZASI (İPC) TEBLİĞ TUTANAĞI</h1>
+        <h1>İDARİ PARA CEZASI (İPC) BİLGİLENDİRME VE TAKİP TUTANAĞI</h1>
         <div style="font-size:11px">{{ $firma?->unvan }}</div>
+        <div style="font-size:8.5px;color:#555;margin-top:2px">6331 SK m.26/2 gereği resmî İPC kararı Çalışma ve İş Kurumu İl Müdürlüğünce verilir; bu tutanak işveren içi bilgilendirme ve takip amaçlıdır.</div>
     </div>
 
     <table class="kunye">
@@ -75,19 +77,24 @@
     <table class="imza">
         <tr>
             <td>
-                @if (($imzali ?? true) && $tebligi->hazirlayan_kase && is_file(storage_path('app/public/'.$tebligi->hazirlayan_kase)))
-                    <img src="{{ storage_path('app/public/'.$tebligi->hazirlayan_kase) }}">
-                @endif
+                <div class="alan">
+                    @if (($imzali ?? true) && $tebligi->hazirlayan_kase && is_file(storage_path('app/public/'.$tebligi->hazirlayan_kase)))
+                        <img src="{{ storage_path('app/public/'.$tebligi->hazirlayan_kase) }}">
+                    @endif
+                </div>
                 İSG Uzmanı<br>(Hazırlayan – Kaşe)
             </td>
-            <td>İşveren / İşveren Vekili<br>(Tebellüğ – İmza)</td>
+            <td>
+                <div class="alan"></div>
+                İşveren / İşveren Vekili<br>(Bilgilendirildi – İmza)
+            </td>
         </tr>
     </table>
 
     <p class="yasal">
-        Bu karara karşı tebliğ tarihinden itibaren 15 gün içinde yetkili Sulh Ceza Hakimliği'ne
-        itiraz edilebilir (5326 sayılı Kabahatler Kanunu m.27). Cezanın tebliğ tarihinden itibaren
-        15 gün içinde peşin ödenmesi halinde %25 indirim uygulanır (Kabahatler Kanunu m.17/6).
+        6331 sayılı İSG Kanunu m.26/2 uyarınca idari para cezaları resmî tebliğinden itibaren <strong>30 gün içinde</strong> ödenir.
+        Resmî tebliğ tarihinden itibaren <strong>15 gün içinde</strong> yetkili Sulh Ceza Hakimliği'ne itiraz edilebilir (5326 sayılı Kabahatler Kanunu m.27).
+        Kanun yoluna başvurmadan önce (15 gün içinde) peşin ödenmesi halinde %25 indirim uygulanır; <strong>peşin ödeme, kişinin bu karara karşı kanun yoluna başvurma hakkını etkilemez</strong> (5326 SK m.17/6).
     </p>
 
 </div>

@@ -72,7 +72,7 @@
     <tr><td class="e">Adres</td><td colspan="3">{{ $firma?->adres ?: '—' }}</td></tr>
     <tr>
         <td class="e">SGK Sicil No</td><td>{{ $firma?->sgk_sicil_no ?: '—' }}</td>
-        <td class="e">Düzenleme Tarihi</td><td>{{ now()->format('d.m.Y') }}</td>
+        <td class="e">Düzenleme Tarihi</td><td>{{ ($defter->created_at ?? now())->format('d.m.Y') }}</td>
     </tr>
     <tr>
         <td class="e">NACE Kodu / Tehlike Sınıfı</td>
@@ -119,27 +119,29 @@
     <p style="color:#888">Madde eklenmedi.</p>
 @endforelse
 
+<p style="margin-top:8px;font-size:8px;color:#475569">
+    <strong>Onaylı Defter Saklama Hükmü (İSG Hizmetleri Yön. m.7/3–5):</strong> Onaylı defterin her sayfası Çalışma ve İş Kurumu İl Müdürlükleri, Genel Müdürlük veya noterce mühürlenerek onaylanır. Defterin asıl sureti işverende, diğer suretleri iş güvenliği uzmanı ve işyeri hekimi tarafından muhafaza edilir.
+</p>
+
 <table class="imza">
     <tr>
-        <td class="kutu" style="width:{{ $hekim ? '31%' : '45%' }}">
+        <td class="kutu" style="width:31%">
             <div class="cizgi"></div>
             <div class="ad">{{ $uzman['ad'] ?: '.............................' }}</div>
             <div>{{ $uzman['unvan'] }}</div>
             @if ($uzman['belge_no'])<div>Belge No: {{ $uzman['belge_no'] }}</div>@endif
             <div class="kucuk">(İmza – Kaşe)</div>
         </td>
-        @if ($hekim)
-            <td class="ara"></td>
-            <td class="kutu" style="width:30%">
-                <div class="cizgi"></div>
-                <div class="ad">{{ $hekim['ad'] }}</div>
-                <div>{{ $hekim['unvan'] }}</div>
-                @if ($hekim['belge_no'])<div>Belge No: {{ $hekim['belge_no'] }}</div>@endif
-                <div class="kucuk">(İmza – Kaşe)</div>
-            </td>
-        @endif
         <td class="ara"></td>
-        <td class="kutu" style="width:{{ $hekim ? '31%' : '45%' }}">
+        <td class="kutu" style="width:30%">
+            <div class="cizgi"></div>
+            <div class="ad">{{ $hekim['ad'] ?? '.............................' }}</div>
+            <div>{{ $hekim['unvan'] ?? 'İşyeri Hekimi' }}</div>
+            @if (! empty($hekim['belge_no']))<div>Belge No: {{ $hekim['belge_no'] }}</div>@endif
+            <div class="kucuk">(İmza – Kaşe)</div>
+        </td>
+        <td class="ara"></td>
+        <td class="kutu" style="width:31%">
             <div class="cizgi"></div>
             <div class="ad">{{ $isveren ?: '.............................' }}</div>
             <div>İşveren / İşveren Vekili</div>

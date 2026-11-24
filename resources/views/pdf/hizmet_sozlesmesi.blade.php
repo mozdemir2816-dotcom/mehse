@@ -2,7 +2,7 @@
 @php
     $musteriAdres = trim(implode(' ', array_filter([$user->fatura_adresi, collect([$user->fatura_ilce, $user->fatura_il])->filter()->implode(' / ')])));
     $vd = trim((string) $user->vergi_dairesi);
-    if ($vd !== '' && ! str_contains(mb_strtolower($vd), 'vergi dairesi')) {
+    if ($vd !== '' && ! str_contains(\App\Support\TurkceMetin::kucuk($vd), 'vergi dairesi')) {
         $vd .= ' Vergi Dairesi';
     }
 @endphp

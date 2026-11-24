@@ -67,7 +67,7 @@
             <th style="width:6%">Cinsiyet</th>
             <th style="width:7%">İşe Giriş</th>
             <th style="width:7%">İşten Çıkış</th>
-            <th style="width:6%">Ağır-Teh.</th>
+            <th style="width:6%">Mesleki Eğt. (m.17/3)</th>
             <th style="width:9%">Özel Durum</th>
             <th style="width:6%">Durum</th>
         </tr>
@@ -92,6 +92,23 @@
             <tr><td colspan="12" class="bos">Kayıt bulunamadı.</td></tr>
         @endforelse
     </tbody>
+</table>
+
+<p style="margin-top:8px;font-size:7.5px;color:#475569;border:1px solid #cbd5e1;background:#f8fafc;padding:4px 6px">
+    <strong>KVKK GİZLİLİK NOTU (6698 s.K. m.6 &amp; m.12):</strong> Bu personel listesi çalışanların kişisel ve özel nitelikli verilerini içerebilir; yalnızca yetkili İSG/İK birimleri tarafından gizlilik esaslarına uygun muhafaza edilir.
+</p>
+
+<table style="width:100%;border-collapse:collapse;margin-top:14px;page-break-inside:avoid;font-size:8px">
+    <tr>
+        <td style="width:50%;text-align:center;padding:4px 12px">
+            <div style="height:28px;border-bottom:1px solid #334155;margin:0 30px 4px"></div>
+            <strong>Hazırlayan (İSG Uzmanı / İK)</strong>
+        </td>
+        <td style="width:50%;text-align:center;padding:4px 12px">
+            <div style="height:28px;border-bottom:1px solid #334155;margin:0 30px 4px"></div>
+            <strong>Onaylayan (İşveren / İşveren Vekili)</strong>
+        </td>
+    </tr>
 </table>
 
 </body>

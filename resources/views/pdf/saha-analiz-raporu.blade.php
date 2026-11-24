@@ -16,13 +16,15 @@
     .derece-3 { color: #d97706; font-weight: bold; }
     .derece-4 { color: #16a34a; font-weight: bold; }
     .firma-banner { text-align: center; font-weight: bold; font-size: 11px; border: 1px solid #999; border-top: none; padding: 6px; margin-bottom: 8px; }
-    table.bulgular { width: 100%; border-collapse: collapse; font-size: 8px; }
-    table.bulgular th, table.bulgular td { border: 1px solid #999; padding: 4px 6px; text-align: left; vertical-align: top; }
+    table.bulgular { width: 100%; border-collapse: collapse; font-size: 8px; table-layout: fixed; }
+    table.bulgular thead { display: table-header-group; }
+    table.bulgular tr { page-break-inside: avoid; }
+    table.bulgular th, table.bulgular td { border: 1px solid #999; padding: 4px 6px; text-align: left; vertical-align: top; word-wrap: break-word; }
     table.bulgular th { background: #f0f0f0; text-align: center; }
     table.bulgular td.orta { text-align: center; }
-    table.bulgular img { width: 100%; max-height: 70px; object-fit: cover; }
+    table.bulgular img { max-width: 100%; max-height: 70px; }
     table.bulgular ol { margin: 0; padding-left: 12px; }
-    .imza { margin-top: 20px; width: 40%; page-break-inside: avoid; }
+    .imza { margin-top: 20px; width: 100%; page-break-inside: avoid; }
     .imza img { max-height: 55px; display: block; margin-bottom: 4px; }
     .imza .baslik { font-weight: bold; font-size: 9px; margin-bottom: 4px; }
 </style>
@@ -32,20 +34,19 @@
 
     <table class="ust">
         <tr>
-            <td style="width:22%">
+            <td style="width:20%">
                 <span class="etiket">Gözetim Yapan :</span> İş Güvenliği Uzmanı<br>
                 <span class="etiket">Sorumlu Kişi :</span> {{ $rapor->sorumlu_kisi ?: '—' }}
             </td>
-            <td class="baslik-hucre" style="width:34%">İSG SAHA GÖZETİM RAPORU</td>
-            <td style="width:22%">
+            <td class="baslik-hucre" style="width:26%">İSG SAHA GÖZETİM RAPORU</td>
+            <td style="width:18%">
                 <span class="etiket">Gözetim Tarih Aralığı :</span> {{ $rapor->gozetim_tarih_araligi ?: '—' }}<br>
                 <span class="etiket">Alan / Bölge :</span> {{ $rapor->alan_bolge ?: '—' }}
             </td>
-            <td style="width:22%">
-                
+            <td style="width:18%">
                 <span class="etiket">Rapor Tarihi / No :</span> {{ $rapor->rapor_tarihi?->format('d.m.Y') }} / {{ $rapor->belge_no }}
             </td>
-            <td style="width:20%">
+            <td style="width:18%">
                 <div class="derece-legend">
                     <span class="etiket">Risk Derecesi :</span><br>
                     <span class="derece-1">1. Derece (Çok Yüksek)</span> &nbsp; <span class="derece-3">3. Derece (Orta)</span><br>
@@ -58,16 +59,19 @@
     <div class="firma-banner">{{ $firma?->unvan }}</div>
 
     <table class="bulgular">
+        <thead>
         <tr>
-            <th style="width:3%">Sıra No</th>
+            <th style="width:4%">Sıra No</th>
             <th style="width:8%">Bina/Bölge Adı</th>
             <th style="width:12%">Saha Gözetimi Uygunsuzluk Fotosu</th>
             <th style="width:22%">Uygunsuzluklar / Tehlikeler / Riskler</th>
             <th style="width:24%">Uygun Hale Getirme (Açıklama)</th>
-            <th style="width:12%">Uygun Hale Getirme (Örnek Resim)</th>
+            <th style="width:10%">Uygun Hale Getirme (Örnek)</th>
             <th style="width:14%">İlgili Yasal Gerekçe</th>
             <th style="width:6%">Risk Derecesi</th>
         </tr>
+        </thead>
+        <tbody>
         @forelse (($rapor->bulgular ?? []) as $i => $b)
             <tr>
                 <td class="orta">{{ $i + 1 }}</td>
@@ -94,15 +98,25 @@
         @empty
             <tr><td colspan="8" style="color:#888;text-align:center">Bulgu eklenmedi.</td></tr>
         @endforelse
+        </tbody>
     </table>
 
-    <div class="imza">
-        <div class="baslik">İŞ GÜVENLİĞİ UZMANI</div>
-        @if (($imzali ?? true) && $rapor->gozetim_yapan_kase && is_file(storage_path('app/public/'.$rapor->gozetim_yapan_kase)))
-            <img src="{{ storage_path('app/public/'.$rapor->gozetim_yapan_kase) }}">
-        @endif
-        İş Güvenliği Uzmanı<br>Kaşe / İmza
-    </div>
+    <table style="width:100%;border-collapse:collapse;margin-top:16px;page-break-inside:avoid;font-size:8.5px">
+        <tr>
+            <td style="width:50%;vertical-align:top">
+                <div class="baslik" style="font-weight:bold;margin-bottom:4px">İŞ GÜVENLİĞİ UZMANI</div>
+                @if (($imzali ?? true) && $rapor->gozetim_yapan_kase && is_file(storage_path('app/public/'.$rapor->gozetim_yapan_kase)))
+                    <img src="{{ storage_path('app/public/'.$rapor->gozetim_yapan_kase) }}" style="max-height:55px;display:block;margin-bottom:4px">
+                @endif
+                {{ $firma?->igu?->ad_soyad ?: 'İş Güvenliği Uzmanı' }}{{ $firma?->igu?->sertifika_no ? ' (Belge No: '.$firma->igu->sertifika_no.')' : '' }}<br>Kaşe / İmza
+            </td>
+            <td style="width:50%;vertical-align:top">
+                <div class="baslik" style="font-weight:bold;margin-bottom:4px">İŞVEREN / İŞVEREN VEKİLİ (TEBELLÜĞ)</div>
+                <div style="height:40px"></div>
+                {{ $firma?->isveren_vekili ?: ($firma?->isveren_ad ?: 'İşveren / İşveren Vekili') }}<br>Kaşe / İmza
+            </td>
+        </tr>
+    </table>
 
 </div>
 </body>

@@ -33,7 +33,7 @@
         <tr>
             <td style="width:62%;vertical-align:top;border:none;padding-left:0">
                 <div class="imza-kutu">
-                    <div style="font-weight:bold;margin-bottom:6px">Çalışan Islak / Canlı İmza Örneği</div>
+                    <div style="font-weight:bold;margin-bottom:6px">Çalışan Canlı İmza Görseli (Dokunmatik Ekran / Basit Elektronik Onay)</div>
                     @if ($imzaBase64)
                         <img src="{{ $imzaBase64 }}" style="max-height:110px;max-width:260px" alt="İmza">
                     @else
