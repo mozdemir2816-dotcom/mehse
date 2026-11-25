@@ -609,4 +609,88 @@ class EgitimKatilimYillikPlanSenkronTest extends TestCase
         $ozelPlan = YillikPlan::where('firma_id', $ozelInsaat->id)->where('yil', 2027)->firstOrFail();
         $this->assertContains('Sadece Bu Firmaya Özel Elektronik Kart Lehimi', collect($ozelPlan->egitimler)->pluck('konu')->all());
     }
+
+    public function test_isyerinde_yapilan_is_kalemleri_secimi_yillik_plani_ve_katilim_formunu_tum_sektorlerde_besler(): void
+    {
+        // 1) İmalat / Metal firması: Yıllık Eğitim Planında iş kalemi seçip 4. bölüme uygula
+        $metal = Firma::factory()->for($this->uzman)->create([
+            'unvan' => 'FOM Makina Test Ltd.',
+            'tehlike_sinifi' => 'tehlikeli',
+            'nace_kodu' => '25.62.01',
+        ]);
+
+        // Mevcut planda 'Talaşlı İmalat (CNC / Torna / Freze)' Ocak ayında tamamlanmış (G) olsun
+        $plan = YillikPlan::firmaYilIcin($metal, 2027);
+        $aylarG = array_fill(0, 12, 'planlandi');
+        $aylarG[0] = 'tamamlandi';
+        $mevcut = collect($plan->egitimler)->reject(fn ($e) => ($e['kategori'] ?? null) === 'ise_ozgu')->values()->all();
+        $mevcut[] = [
+            'konu' => 'Talaşlı İmalat (CNC / Torna / Freze)',
+            'kategori' => 'ise_ozgu',
+            'hedef' => '',
+            'egitici' => 'İŞ GÜVENLİĞİ UZMANI',
+            'hafta' => 2,
+            'aylar' => $aylarG,
+            'kutuphane_anahtari' => 'kalem_imalat_talasli',
+        ];
+        $plan->update(['egitimler' => $mevcut]);
+
+        Livewire::test(YillikEgitimPlani::class)
+            ->set('firmaId', $metal->id)
+            ->set('yil', 2027)
+            ->assertSee('İşyerinde Yapılan İş Kalemleri')
+            ->assertSee('Talaşlı İmalat (CNC / Torna / Freze)')
+            ->call('isKalemiToggle', 'imalat_talasli')
+            ->call('isKalemiToggle', 'imalat_pres')
+            ->call('isKalemleriniPlanaUygula')
+            ->assertNotified();
+
+        $metal->refresh();
+        $this->assertSame(['imalat_talasli', 'imalat_pres'], $metal->is_kalemleri);
+        $this->assertFalse(IseOzguSenkron::firmaOzelMi($metal), 'Kendi NACE grubundan iş kalemi seçildiğinde gereksiz yalıtım yapılmamalı');
+
+        $ozgu = collect($plan->fresh()->egitimler)->where('kategori', 'ise_ozgu')->values();
+        $this->assertSame(['Talaşlı İmalat (CNC / Torna / Freze)', 'Pres / Abkant Büküm / Giyotin Makas'], $ozgu->pluck('konu')->all());
+        $this->assertSame('tamamlandi', $ozgu->firstWhere('konu', 'Talaşlı İmalat (CNC / Torna / Freze)')['aylar'][0], 'Önceki G ayı korunmalı');
+        $this->assertEqualsWithDelta(4.0, (float) $ozgu->sum('yuz_yuze_saat'), 0.01);
+
+        // 2) Eğitim Katılım Formu açıldığında (İmalat sektörü!) YALNIZ bu firmanın seçtiği 2 iş kalemi ekip butonu olarak gelmeli
+        $katilim = Livewire::test(EgitimSayfasi::class)
+            ->set('firmaId', $metal->id)
+            ->set('egitimSekli', 'karma');
+
+        $this->assertSame([
+            'imalat_talasli' => 'Talaşlı İmalat (CNC / Torna / Freze)',
+            'imalat_pres' => 'Pres / Abkant Büküm / Giyotin Makas',
+        ], $katilim->instance()->isKalemiSecenekleri);
+
+        // Tek ekip (Pres) seçilince 4. bölüm YALNIZ pres ekipman konusu + tam 180 dk olur!
+        $katilim->call('isKoluToggle', 'imalat_pres')
+            ->assertSet('isKolu', 'Pres / Abkant Büküm / Giyotin Makas');
+        $maddeler = $katilim->get('icerik')['isyerine_ozgu']['maddeler'];
+        $this->assertCount(1, $maddeler);
+        $this->assertStringContainsString('abkant', mb_strtolower($maddeler[0]['madde']));
+        $this->assertSame(180, (int) $maddeler[0]['dakika']);
+
+        // "Tüm sektör iş kalemlerini göster" açılınca diğer sektörlerin kalemleri de görünür
+        $katilim->set('tumIsKalemleriGoster', true);
+        $this->assertArrayHasKey('kalip_isleri', $katilim->instance()->isKalemiSecenekleri);
+        $this->assertArrayHasKey('gida_isleme', $katilim->instance()->isKalemiSecenekleri);
+
+        // 3) NACE'si inşaat (43.34) ama gerçek işi Boyahane olan firma → farklı sektör iş kalemi seçince otomatik yalıtılır!
+        $tozBoya = Firma::factory()->for($this->uzman)->create([
+            'unvan' => 'BTM Toz Boya Test',
+            'tehlike_sinifi' => 'tehlikeli',
+            'nace_kodu' => '43.34.01',
+        ]);
+        Livewire::test(YillikEgitimPlani::class)
+            ->set('firmaId', $tozBoya->id)
+            ->set('yil', 2027)
+            ->call('isKalemiToggle', 'imalat_boyahane')
+            ->call('isKalemleriniPlanaUygula')
+            ->assertNotified();
+
+        $this->assertTrue(IseOzguSenkron::firmaOzelMi($tozBoya), 'NACE dışı sektör iş kalemi seçen firma otomatik yalıtılmalı');
+        $this->assertSame(['imalat_boyahane'], $tozBoya->fresh()->is_kalemleri);
+    }
 }

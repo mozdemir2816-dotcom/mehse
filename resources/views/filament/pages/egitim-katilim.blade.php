@@ -137,7 +137,20 @@
                 </select>
             </div>
             <div style="grid-column:1/-1">
-                <label class="mehse-etiket">Çalışan Grubu / İş Kolu <span style="font-weight:400;color:rgb(107 114 128)">(isteğe bağlı)</span></label>
+                <div style="display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:.4rem">
+                    <label class="mehse-etiket" style="margin-bottom:0">
+                        Çalışan Grubu / İş Kolu <span style="font-weight:400;color:rgb(107 114 128)">(isteğe bağlı)</span>
+                        @if ($this->firma && filled($this->firma->is_kalemleri) && ! $tumIsKalemleriGoster)
+                            <span style="margin-left:.35rem;padding:.1rem .45rem;border-radius:9999px;font-size:.7rem;font-weight:700;background:rgb(16 185 129 / .12);color:#047857">Firmanın seçili iş kalemleri ({{ count($this->firma->is_kalemleri) }})</span>
+                        @endif
+                    </label>
+                    @if ($this->firma)
+                        <button type="button" wire:click="$toggle('tumIsKalemleriGoster')"
+                            style="font-size:.74rem;color:#2563eb;text-decoration:underline;background:none;border:none;cursor:pointer">
+                            {{ $tumIsKalemleriGoster ? (filled($this->firma->is_kalemleri) ? 'Yalnız firmanın iş kalemlerini göster' : 'Yalnız bu sektörün iş kalemlerini göster') : 'Tüm sektör iş kalemlerini göster' }}
+                        </button>
+                    @endif
+                </div>
                 @if ($this->isKalemiSecenekleri)
                     <div style="display:flex;flex-wrap:wrap;gap:.35rem;margin:.35rem 0">
                         @foreach ($this->isKalemiSecenekleri as $anahtar => $ad)

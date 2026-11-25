@@ -283,8 +283,8 @@ class SayfaRehberi
                 'baslik' => 'Eğitim & Sınav Merkezi — Detaylı Kullanım ve Yönlendirme Rehberi',
                 'ozet' => 'Temel İSG eğitimlerini (Tamamı Yüz Yüze, Uzaktan/Online veya Karma Tamamlama), ekip bazlı formları (Kalıp / Sıva), 10 soruluk sınav kâğıtlarını ve sertifikaları Yıllık Eğitim Planı ile birebir senkron biçimde yönetin.',
                 'adimlar' => [
-                    '1. İLK ADIM — Yıllık Eğitim Planı (Ana Kaynak): Önce Yıllık Eğitim Planı ekranından "✨ AI ile Tüm Firmaları Planla" (veya tek firma için "✨ AI ile Bu Firmanın 4. Bölümünü Planla") ile her firmanın 4. bölümünü ve Karma saatlerini oluşturun. Eğitim Katılım, Boş Form ve Sertifikalar doğrudan bu plandan beslenir.',
-                    '2. Firma, Şekil ve Ekip Seçimi: Firmayı seçin; "Eğitim Şekli (Katılım Formu Tipi)" kutusundan Tamamı Yüz Yüze, Uzaktan/Online veya Yüz Yüze Tamamlama (Karma) formunu seçin. Şantiyede farklı ekiplere eğitim veriyorsanız "Çalışan Grubu / İş Kolu" etiketini işaretleyin.',
+                    '1. İLK ADIM — Yıllık Eğitim Planı (Ana Kaynak): Önce Yıllık Eğitim Planı ekranından "🏗️ İşyerinde Yapılan İş Kalemleri" butonlarıyla firmanın sahada gerçekten yaptığı işleri işaretleyip 4. Bölüme uygulayın (veya "✨ AI ile Tüm Firmaları Planla" kullanın). Eğitim Katılım, ekip butonları, Boş Form ve Sertifikalar doğrudan bu seçimden beslenir.',
+                    '2. Firma, Şekil ve Ekip Seçimi: Firmayı seçin; "Eğitim Şekli (Katılım Formu Tipi)" kutusundan Tamamı Yüz Yüze, Uzaktan/Online veya Yüz Yüze Tamamlama (Karma) formunu seçin. Farklı ekiplere eğitim veriyorsanız "Çalışan Grubu / İş Kolu" altında firmanın seçili iş kalemlerinden ilgili ekibi işaretleyin (tüm sektörlerde geçerlidir).',
                     '3. Konular, Otomatik Süre ve Katılımcılar: 4. bölüm firmanın Yıllık Eğitim Planından birebir gelir; isterseniz "+ Konu Ekle" / "✕" ile düzenleyin — dakikalar toplam eğitim süresine göre kayıpsız otomatik bölünür ve Boş Form (PDF) ekrandaki güncel haliyle çıkar.',
                     '4. Çıktı & Otomatik İşleme: Üstteki "Çıktı Al ▾" menüsünden PDF (TR veya TR/EN), Excel, Word, 10 Soruluk Sınav Kâğıdı veya Sertifika indirin. Kaydedilen eğitim Yıllık Eğitim Planına ve yenileme takibine otomatik işlenir.',
                 ],
@@ -502,9 +502,9 @@ class SayfaRehberi
                 'ozet' => 'RG 02.04.2026 (33212) uyumlu yıllık eğitim planını Online + Yüz Yüze (Karma) olarak planlayın, NACE uyuşmayan firmalarda Gerçek İş Grubu atayın ve aynı işi yapan firmaları tek tıkla eşitleyin.',
                 'adimlar' => [
                     'Firmayı ve yılı seçin; üst yeşil şeritten "Karma — MEHSE LMS (8s/4s Online + Kalanı Yüz Yüze)" modunu seçip "Online / Yüz Yüze Otomatik Planla" butonuna basın.',
-                    'NACE kodu gerçek işiyle uyuşmayan firmada "4. Bölüm Gerçek İş Grubu" seçicisinden doğru sektörü seçin ve "4. Bölümü Gruba Göre Doldur" deyin.',
-                    '4. bölümü düzenledikten sonra "Aynı İş Grubundaki Firmalara Eşitle" butonuna basarak aynı işi yapan tüm firmaların 4. bölümünü tek tıkla güncelleyin (tamamlanmış G ayları korunur).',
-                    'Alttaki "✨ AI ile 4. Bölüm Üret" veya "+ Ekle" ile konu ekledikçe/sildikçe satır saatleri toplam eğitim süresine göre otomatik güncellenir; hazır olduğunda Excel çıktısı alın.',
+                    '"🏗️ İşyerinde Yapılan İş Kalemleri" bölümünden o işyerinde fiilen yapılan işleri (İnşaat 7 aşama, İmalat/Fabrika, Gıda/Tarım, Hizmet/Lojistik) işaretleyip "Seçili İş Kalemlerini 4. Bölüme Uygula" deyin — 4. bölüm makine/ekipman içerikleriyle kurulur, G ayları korunur ve Eğitim Katılım Formu ekip butonları da otomatik bu kalemlerle güncellenir.',
+                    'NACE kodu gerçek işiyle uyuşmayan firmada diğer sektörlerin iş kalemlerini seçtiğinizde firma otomatik "🔒 Yalnız Bu Firmaya Özel" yalıtımına alınır; diğer aynı NACE\'li firmaların şablonlarını bozmaz.',
+                    '4. bölümü düzenledikten sonra aynı işi yapan firmaları tek tıkla eşitleyebilir, "Tüm Firmalar (Klasörlü ZIP)" veya "Çıktı Al (Excel)" ile çıktı alabilirsiniz.',
                 ],
                 'bolumler' => [
                     [

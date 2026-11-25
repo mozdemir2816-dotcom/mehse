@@ -295,6 +295,52 @@
                         @endif
                     </div>
 
+                    {{-- İşyerinde Yapılan İş Kalemleri → 4. Bölüm & Eğitim Katılım Ekip Kaynağı --}}
+                    <div style="margin-top:.65rem;padding-top:.6rem;border-top:1px dashed rgb(100 116 139 / .25)">
+                        <div style="display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:.45rem;margin-bottom:.45rem">
+                            <div style="display:flex;flex-wrap:wrap;align-items:center;gap:.4rem">
+                                <span style="font-size:.76rem;font-weight:700;color:rgb(15 23 42)">🏗️ İşyerinde Yapılan İş Kalemleri</span>
+                                <span style="font-size:.71rem;color:rgb(100 116 139)">(Seçtikleriniz firmanın 4. Bölümünü ve Eğitim Katılım ekip butonlarını kurar)</span>
+                            </div>
+                            <div style="display:flex;flex-wrap:wrap;align-items:center;gap:.4rem">
+                                <button type="button" wire:click="$toggle('tumIsKalemleriniGoster')"
+                                    style="font-size:.72rem;color:#2563eb;text-decoration:underline;background:none;border:none;cursor:pointer">
+                                    {{ $tumIsKalemleriniGoster ? 'Yalnız bu sektörün iş kalemlerini göster' : 'Diğer sektör iş kalemlerini göster' }}
+                                </button>
+                                <x-filament::button size="xs" color="success" icon="heroicon-o-check-circle" wire:click="isKalemleriniPlanaUygula">
+                                    Seçili İş Kalemlerini 4. Bölüme Uygula ({{ count($seciliIsKalemleri) }})
+                                </x-filament::button>
+                            </div>
+                        </div>
+
+                        @php
+                            $anaGrupAd = $this->anaIsKalemiGrubu;
+                        @endphp
+                        @foreach ($this->isKalemiGruplari as $grupAdi => $kalemler)
+                            @php
+                                $buGruptaSecili = collect(array_keys($kalemler))->contains(fn ($a) => in_array($a, $seciliIsKalemleri, true));
+                                $goster = $tumIsKalemleriniGoster || $grupAdi === $anaGrupAd || $buGruptaSecili;
+                            @endphp
+                            @if ($goster)
+                                <div style="margin-bottom:.4rem">
+                                    <div style="font-size:.7rem;font-weight:700;color:rgb(71 85 105);margin-bottom:.25rem">
+                                        {{ $grupAdi }}@if ($grupAdi === $anaGrupAd) <span style="font-weight:600;color:#0f766e">· Öncelikli Grup</span>@endif
+                                    </div>
+                                    <div style="display:flex;flex-wrap:wrap;gap:.3rem">
+                                        @foreach ($kalemler as $kAnahtar => $kVeri)
+                                            @php $aktif = in_array($kAnahtar, $seciliIsKalemleri, true); @endphp
+                                            <button type="button" wire:click="isKalemiToggle('{{ $kAnahtar }}')"
+                                                title="{{ $kVeri['egitim_konusu'] }}"
+                                                style="padding:.22rem .58rem;border-radius:9999px;cursor:pointer;font-size:.73rem;font-weight:{{ $aktif ? '700' : '500' }};border:1px solid {{ $aktif ? '#047857' : 'rgb(107 114 128 / .35)' }};background:{{ $aktif ? 'rgb(16 185 129 / .14)' : '#fff' }};color:{{ $aktif ? '#065f46' : '#334155' }}">
+                                                {{ $aktif ? '✓ ' : '+ ' }}{{ $kVeri['ad'] }}
+                                            </button>
+                                        @endforeach
+                                    </div>
+                                </div>
+                            @endif
+                        @endforeach
+                    </div>
+
                     @if (! empty($egitimOzet['uyarilar']))
                         <ul style="margin:.55rem 0 0;padding-left:1.1rem;font-size:.75rem;color:#b91c1c">
                             @foreach ($egitimOzet['uyarilar'] as $uyari)

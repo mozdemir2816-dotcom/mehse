@@ -1132,19 +1132,95 @@ return [
                 ],
             ],
             'İmalat / Fabrika' => [
-                ['ad' => 'Kaynak İşleri', 'v' => ['baret' => 'Gerekirse', 'gozluk' => 'Kaynak maskesi + gözlük', 'maske' => 'Kaynak dumanı maskesi', 'eldiven' => 'EN 388 + EN 407', 'ayakkabi' => '✔ S3', 'diger' => 'Kaynakçı önlüğü / tozluk']],
-                ['ad' => 'Talaşlı İmalat (CNC / Torna / Freze)', 'v' => ['gozluk' => '✔', 'kulaklik' => '✔', 'eldiven' => 'Dönen parçada TAKILMAZ', 'ayakkabi' => '✔ S3', 'diger' => 'Yüz siperi']],
-                ['ad' => 'Pres / Büküm / Giyotin', 'v' => ['gozluk' => '✔', 'kulaklik' => '✔', 'eldiven' => 'EN 388 kesilmeye dayanıklı', 'ayakkabi' => '✔ S3']],
-                ['ad' => 'Boyahane / Yüzey İşlem', 'v' => ['gozluk' => '✔', 'maske' => 'EN 14387 A2P3 / tam yüz', 'eldiven' => 'EN 374 kimyasal', 'ayakkabi' => '✔ S3', 'diger' => 'Solunum koruyuculu tulum']],
-                ['ad' => 'Depo / Forklift Operasyonu', 'v' => ['baret' => 'Gerekirse', 'ayakkabi' => '✔ S3', 'yelek' => '✔']],
-                ['ad' => 'Bakım / Onarım', 'v' => ['baret' => 'Gerekirse', 'gozluk' => '✔', 'kulaklik' => 'Gerekirse', 'eldiven' => 'EN 388', 'ayakkabi' => '✔ S3', 'kemer' => 'Yüksekte ise', 'diger' => 'LOTO kilit-etiket']],
-                ['ad' => 'Kimyasal Depolama / Transfer', 'v' => ['gozluk' => '✔ / yüz siperi', 'maske' => 'GBF\'ye göre filtre', 'eldiven' => 'EN 374', 'ayakkabi' => '✔ S3', 'diger' => 'Kimyasal önlük / göz duşu erişimi']],
+                [
+                    'anahtar' => 'imalat_kaynak', 'ad' => 'Kaynak İşleri (MIG/MAG/TIG/Ark)',
+                    'v' => ['baret' => 'Gerekirse', 'gozluk' => 'Kaynak maskesi + gözlük', 'maske' => 'Kaynak dumanı maskesi', 'eldiven' => 'EN 388 + EN 407', 'ayakkabi' => '✔ S3', 'diger' => 'Kaynakçı önlüğü / tozluk'],
+                    'egitim_konusu' => 'Elektrik ark ve gazaltı (MIG/MAG/TIG) kaynak makineleri, oksijen-asetilen tüpleri ve alev geri tepme valfi, kaynak dumanı lokal emişi, sıcak iş izni, UV/IR kaynak maskesi ve yangın önlemleri.',
+                ],
+                [
+                    'anahtar' => 'imalat_talasli', 'ad' => 'Talaşlı İmalat (CNC / Torna / Freze)',
+                    'v' => ['gozluk' => '✔', 'kulaklik' => '✔', 'eldiven' => 'Dönen parçada TAKILMAZ', 'ayakkabi' => '✔ S3', 'diger' => 'Yüz siperi'],
+                    'egitim_konusu' => 'CNC işleme merkezi, üniversal torna, freze, matkap ve şerit testere tezgâhlarında kapak emniyet kilidi, dönen parçada eldiven/bol kıyafet yasağı, talaş/çapak sıçraması, bor yağı hijyeni ve acil durdurma kuralları.',
+                ],
+                [
+                    'anahtar' => 'imalat_pres', 'ad' => 'Pres / Abkant Büküm / Giyotin Makas',
+                    'v' => ['gozluk' => '✔', 'kulaklik' => '✔', 'eldiven' => 'EN 388 kesilmeye dayanıklı', 'ayakkabi' => '✔ S3'],
+                    'egitim_konusu' => 'Eksantrik/hidrolik pres, abkant büküm ve giyotin makaslarda ışık perdesi ve çift el kumanda kontrolü, kalıp değişiminde LOTO (kilitle-etiketle), sac kenarı kesilme riski ve gürültüden korunma.',
+                ],
+                [
+                    'anahtar' => 'imalat_boyahane', 'ad' => 'Boyahane / Toz Boya / Yüzey İşlem',
+                    'v' => ['gozluk' => '✔', 'maske' => 'EN 14387 A2P3 / tam yüz', 'eldiven' => 'EN 374 kimyasal', 'ayakkabi' => '✔ S3', 'diger' => 'Solunum koruyuculu tulum'],
+                    'egitim_konusu' => 'Elektrostatik toz boya kabini, pişirme fırını, yaş boya/tiner/solvent buharı havalandırması, statik elektrik topraklaması (ATEX), yüzey yağ alma/fosfatlama banyoları ve solunum koruyucu KKD kullanımı.',
+                ],
+                [
+                    'anahtar' => 'imalat_plastik', 'ad' => 'Plastik Enjeksiyon / Ekstrüzyon / Kauçuk',
+                    'v' => ['gozluk' => '✔', 'kulaklik' => '✔', 'maske' => '✔ duman/toz', 'eldiven' => '✔ ısıya dayanıklı', 'ayakkabi' => '✔ S3'],
+                    'egitim_konusu' => 'Plastik enjeksiyon presi, ekstrüzyon hattı, sıcak kalıp ve eriyik yanığı önlemleri, kırma/granül makinesi kapak kilidi, hammadde toz/duman emişi ve tavan vinciyle kalıp değişimi güvenliği.',
+                ],
+                [
+                    'anahtar' => 'imalat_depo_forklift', 'ad' => 'Depo / Forklift / Tavan Vinci Operasyonu',
+                    'v' => ['baret' => 'Gerekirse', 'ayakkabi' => '✔ S3', 'yelek' => '✔'],
+                    'egitim_konusu' => 'Forklift, istif makinesi (reach truck), transpalet ve köprülü/monoray tavan vinci güvenli kullanımı; sapan/kanca/zincir kontrolü, raf yük limitleri, istifleme ve fabrika içi araç-yaya yolları.',
+                ],
+                [
+                    'anahtar' => 'imalat_bakim', 'ad' => 'Bakım / Onarım ve Enerji İzolasyonu (LOTO)',
+                    'v' => ['baret' => 'Gerekirse', 'gozluk' => '✔', 'kulaklik' => 'Gerekirse', 'eldiven' => 'EN 388', 'ayakkabi' => '✔ S3', 'kemer' => 'Yüksekte ise', 'diger' => 'LOTO kilit-etiket'],
+                    'egitim_konusu' => 'Makine bakım-onarımında LOTO (elektrik/pnömatik/hidrolik enerji kesme ve kilitleme), elektrik panosu/kompresör/basınçlı kap güvenliği, taşlama/matkap el aletleri ve yüksekte bakım kuralları.',
+                ],
+                [
+                    'anahtar' => 'imalat_kimyasal', 'ad' => 'Kimyasal Depolama / Aktarma ve Atık Yönetimi',
+                    'v' => ['gozluk' => '✔ / yüz siperi', 'maske' => 'GBF\'ye göre filtre', 'eldiven' => 'EN 374', 'ayakkabi' => '✔ S3', 'diger' => 'Kimyasal önlük / göz duşu erişimi'],
+                    'egitim_konusu' => 'Tehlikeli kimyasalların GBF (SDS) ve etiket okunması, asit/baz/solvent aktarma pompaları, taşma tavası ve uyumsuz madde ayrımı, acil göz/boy duşu ve dökülme kiti müdahalesi.',
+                ],
             ],
-            'Genel / Hizmet' => [
-                ['ad' => 'Ofis Çalışması', 'v' => ['diger' => 'Ekranlı araç için ergonomi — KKD gerekmez']],
-                ['ad' => 'Temizlik İşleri', 'v' => ['gozluk' => 'Kimyasal kullanımında', 'maske' => 'Gerekirse', 'eldiven' => 'EN 374', 'ayakkabi' => 'Kaymaz taban']],
-                ['ad' => 'Şoför / Sevkiyat', 'v' => ['ayakkabi' => 'S1P', 'yelek' => '✔ (araç dışı)', 'eldiven' => 'Yük elleçlemede']],
-                ['ad' => 'Arşiv / Depo Görevlisi', 'v' => ['ayakkabi' => 'S3', 'eldiven' => 'Yük elleçlemede', 'diger' => 'Merdiven kullanımı eğitimi']],
+            'Gıda / Tarım / Ormancılık' => [
+                [
+                    'anahtar' => 'gida_isleme', 'ad' => 'Gıda İşleme / Kesme / Paketleme Makineleri',
+                    'v' => ['gozluk' => 'Gerekirse', 'eldiven' => '✔ kesilmez/hijyen', 'ayakkabi' => '✔ kaymaz S2/S4'],
+                    'egitim_konusu' => 'Kesme/doğrama/dilimleme makineleri ve konveyör bantlarda sıkışma-kesilme korumaları, sıcak yüzey/buhar kazanı güvenliği, ıslak-kaygan zemin önlemleri ve tekrarlayıcı hareket ergonomisi.',
+                ],
+                [
+                    'anahtar' => 'gida_soguk_cip', 'ad' => 'Soğuk Hava Deposu ve CIP Temizlik Kimyasalları',
+                    'v' => ['gozluk' => '✔ kimyasal', 'maske' => 'Gerekirse', 'eldiven' => '✔ soğuk/kimyasal', 'ayakkabi' => '✔ kaymaz çizme', 'diger' => 'Termal soğuk depo montu'],
+                    'egitim_konusu' => 'Soğuk hava deposunda çalışma süreleri, içeriden açılan kapı ve mahsur kalma alarmı, soğutucu gaz/amonyak kaçağı acil müdahalesi ve CIP kostik/asit temizlik kimyasalları güvenliği.',
+                ],
+                [
+                    'anahtar' => 'orman_agac_kesimi', 'ad' => 'Ormancılık / Ağaç Kesimi ve Tomruk Taşıma',
+                    'v' => ['baret' => '✔ siperlikli', 'kulaklik' => '✔', 'eldiven' => '✔ kesilmez', 'ayakkabi' => '✔ kesilmez S3', 'diger' => 'Kesilmez pantolon'],
+                    'egitim_konusu' => 'Motorlu testere (zincir freni, geri tepme) güvenli kullanımı, ağaç devirme yönü ve kaçış koridoru, tomruk sürütme/yükleme vinci, eğimli arazide çalışma ve kene/yaban hayatı biyolojik riskleri.',
+                ],
+                [
+                    'anahtar' => 'tarim_traktor', 'ad' => 'Traktör / Tarım Makineleri ve İlaçlama',
+                    'v' => ['gozluk' => '✔', 'maske' => '✔ kimyasal/toz', 'eldiven' => '✔ kimyasal', 'ayakkabi' => '✔ S3 / çizme'],
+                    'egitim_konusu' => 'Traktör ROPS devrilme barı ve emniyet kemeri, kuyruk mili (PTO) şaft koruyucusu, römork bağlantısı, pestisit/gübre hazırlama ve ilaçlama KKD\'si, sıcak/soğuk açık hava çalışma kuralları.',
+                ],
+            ],
+            'Genel / Hizmet / Lojistik' => [
+                [
+                    'anahtar' => 'hizmet_havalandirma', 'ad' => 'Havalandırma / Mekanik / İzolasyon Montajı',
+                    'v' => ['baret' => '✔', 'gozluk' => '✔', 'maske' => '✔ FFP2/FFP3 toz', 'eldiven' => '✔ kesilmez', 'ayakkabi' => '✔ S3', 'kemer' => '✔ yüksekte'],
+                    'egitim_konusu' => 'Havalandırma kanalı, borulama ve izolasyon montajında manlift/mobil iskele ile yüksekte çalışma, sac kenarı kesilmeleri, taş yünü/cam yünü toz ve cilt koruması, spiral taşlama/matkap/kaynak güvenliği.',
+                ],
+                [
+                    'anahtar' => 'hizmet_lojistik_sofor', 'ad' => 'Şoför / Lojistik / Yükleme Rampası',
+                    'v' => ['ayakkabi' => '✔ S1P/S3', 'yelek' => '✔ (araç dışı)', 'eldiven' => 'Yük elleçlemede'],
+                    'egitim_konusu' => 'Ticari araç sürüş güvenliği, yük bağlama ve spançet/sabitleme kuralları, yükleme-boşaltma rampasında teker takozlama, forklift/transpalet trafiği ve uzun yol yorgunluk/vardiya yönetimi.',
+                ],
+                [
+                    'anahtar' => 'hizmet_ofis', 'ad' => 'Ofis Çalışması ve Ekranlı Araçlar',
+                    'v' => ['diger' => 'Ekranlı araç için ergonomi — KKD gerekmez'],
+                    'egitim_konusu' => 'Ekranlı araçlarla çalışmada ergonomi (monitör/sandalye/bilek duruşu), elektrik priz ve kablo düzeni, göz/kas-iskelet dinlendirme molaları, psikososyal riskler ve ofis acil tahliye kuralları.',
+                ],
+                [
+                    'anahtar' => 'hizmet_temizlik', 'ad' => 'Temizlik İşleri ve Kimyasallar',
+                    'v' => ['gozluk' => 'Kimyasal kullanımında', 'maske' => 'Gerekirse', 'eldiven' => 'EN 374', 'ayakkabi' => 'Kaymaz taban'],
+                    'egitim_konusu' => 'Temizlik kimyasallarının (çamaşır suyu + tuz ruhu vb.) kesinlikle karıştırılmaması, ıslak zemin uyarı levhası, yüksekte cam silme önlemleri ve kimyasal eldiven/maske kullanımı.',
+                ],
+                [
+                    'anahtar' => 'hizmet_depo_arsiv', 'ad' => 'Arşiv / Depo ve Elle Taşıma',
+                    'v' => ['ayakkabi' => 'S3', 'eldiven' => 'Yük elleçlemede', 'diger' => 'Merdiven kullanımı eğitimi'],
+                    'egitim_konusu' => 'Doğru elle kaldırma ve taşıma tekniği, depo/arşiv raflarında güvenli istifleme yüksekliği, basamaklı merdiven kullanımı ve malzeme devrilmesine karşı önlemler.',
+                ],
             ],
         ],
     ],

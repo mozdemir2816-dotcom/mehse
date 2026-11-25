@@ -11,6 +11,7 @@ use App\Support\EgitimKonulari;
 use App\Support\GeminiIseOzguEgitimUretici;
 use App\Support\IseOzguEgitimKutuphanesi;
 use App\Support\IseOzguSenkron;
+use App\Support\IsKalemiKutuphanesi;
 use App\Support\YillikDegerlendirmeExcelUretici;
 use App\Support\YillikDegerlendirmeFormUretici;
 use App\Support\YillikDegerlendirmeVerisi;
@@ -111,6 +112,12 @@ abstract class YillikPlanlar extends Page
     /** Firmanın elle seçilmiş "Gerçek İş Grubu" (NACE'si yapılan işle tutmayan firmalar için; null = NACE otomatik). */
     public ?string $firmaEgitimGrubu = null;
 
+    /** Firmanın işyerinde yaptığı seçili iş kalemleri (`firmalar.is_kalemleri` anahtarları). */
+    public array $seciliIsKalemleri = [];
+
+    /** İş kalemi seçicide diğer sektör gruplarını da göster/gizle. */
+    public bool $tumIsKalemleriniGoster = false;
+
     public ?string $yeniDegerlendirmeCalisma = null;
 
     public function mount(): void
@@ -154,7 +161,106 @@ abstract class YillikPlanlar extends Page
         if ($this->sekme === 'egitim' && ($p = $this->plan())) {
             $this->egitimPlanModu = YillikEgitimPlanlayici::moduTespitEt($p->egitimler ?? [], $this->firma);
             $this->firmaEgitimGrubu = IseOzguSenkron::firmaGrubuOku($this->firma) ?? '';
+            $this->seciliIsKalemleri = array_values(array_filter((array) ($this->firma?->is_kalemleri ?? [])));
         }
+    }
+
+    #[Computed]
+    public function anaIsKalemiGrubu(): string
+    {
+        return IsKalemiKutuphanesi::anaGrup(null, $this->firma);
+    }
+
+    #[Computed]
+    public function isKalemiGruplari(): array
+    {
+        $gruplar = IsKalemiKutuphanesi::gruplar();
+        $ana = $this->anaIsKalemiGrubu;
+
+        if (! isset($gruplar[$ana])) {
+            return $gruplar;
+        }
+
+        $sirali = [$ana => $gruplar[$ana]];
+        foreach ($gruplar as $ad => $kalemler) {
+            if ($ad !== $ana) {
+                $sirali[$ad] = $kalemler;
+            }
+        }
+
+        return $sirali;
+    }
+
+    /** İşyerinde yapılan bir iş kalemini seç / kaldır. */
+    public function isKalemiToggle(string $anahtar): void
+    {
+        if (! IsKalemiKutuphanesi::tumu()->has($anahtar)) {
+            return;
+        }
+
+        $this->seciliIsKalemleri = in_array($anahtar, $this->seciliIsKalemleri, true)
+            ? array_values(array_diff($this->seciliIsKalemleri, [$anahtar]))
+            : [...$this->seciliIsKalemleri, $anahtar];
+    }
+
+    /**
+     * Seçili iş kalemlerini firmanın kaydına (`firmalar.is_kalemleri`) kaydeder ve
+     * Yıllık Eğitim Planı 4. Bölümünü yalnız bu iş kalemlerinin makine/ekipman konularıyla kurar.
+     * Mevcut tamamlanmış (G) aylar korunur; 4. bölüm saatleri yasal saate göre otomatik dağıtılır.
+     */
+    public function isKalemleriniPlanaUygula(): void
+    {
+        $p = $this->plan();
+        if (! $p || ! $this->firma) {
+            return;
+        }
+
+        $tumu = IsKalemiKutuphanesi::tumu();
+        $gecerli = array_values(array_unique(array_filter(
+            $this->seciliIsKalemleri,
+            fn ($a) => is_string($a) && $tumu->has($a),
+        )));
+        $this->seciliIsKalemleri = $gecerli;
+
+        $this->firma->update(['is_kalemleri' => $gecerli ?: null]);
+        unset($this->firma);
+
+        if ($gecerli === []) {
+            Notification::make()
+                ->title('Firmanın iş kalemleri temizlendi')
+                ->body('Mevcut 4. bölüm satırları korundu; yeni iş kalemi seçip tekrar uygulayabilirsiniz.')
+                ->info()
+                ->send();
+
+            return;
+        }
+
+        // Seçilen iş kalemlerinden biri firmanın NACE ana grubundan farklıysa firmayı otomatik yalıt
+        // (diğer aynı NACE'li firmaların şablonlarını etkilemez).
+        $naceSektor = EgitimIcerikOlusturucu::naceSektoru($this->firma?->nace_kodu);
+        $farkliGrupVar = false;
+        if (filled($naceSektor)) {
+            $naceAnaGrup = IsKalemiKutuphanesi::anaGrup($naceSektor);
+            $farkliGrupVar = collect($gecerli)->contains(fn (string $a) => ($tumu[$a]['grup'] ?? null) !== $naceAnaGrup);
+            if ($farkliGrupVar && $this->firma) {
+                IseOzguSenkron::firmaOzelKaydet($this->firma, true);
+                unset($this->firmaEgitimOzelMi, $this->ayniIsGrubuFirmaSayisi);
+            }
+        }
+
+        $satirlar = IsKalemiKutuphanesi::planSatirlari($gecerli, $this->kilitAyIndeksi(), $p->egitimler ?? []);
+        $yeniPlan = YillikPlanSablonu::iseOzguYerlestir($p->egitimler ?? [], $satirlar);
+        $yeniPlan = YillikEgitimPlanlayici::satirlaraUygula($yeniPlan, $this->firma, $this->egitimPlanModu);
+
+        $p->update(['egitimler' => $yeniPlan]);
+        unset($this->plan);
+
+        Notification::make()
+            ->title(count($satirlar).' iş kalemi 4. bölüme uygulandı')
+            ->body('Seçili iş kalemleri firmaya kaydedildi; Eğitim Katılım Formu ekip butonları da bu kalemlerden beslenir.'
+                .($farkliGrupVar ? ' (NACE dışı iş kalemi seçildiği için firma yalnız kendine özel olarak yalıtıldı.)' : ''))
+            ->success()
+            ->send();
     }
 
     #[Computed]
@@ -244,7 +350,8 @@ abstract class YillikPlanlar extends Page
     public function updatedFirmaId(): void
     {
         \App\Support\KomutaFirma::sec($this->firmaId);
-        unset($this->firma, $this->plan, $this->firmaEgitimOzelMi, $this->ayniIsGrubuFirmaSayisi);
+        $this->tumIsKalemleriniGoster = false;
+        unset($this->firma, $this->plan, $this->firmaEgitimOzelMi, $this->ayniIsGrubuFirmaSayisi, $this->anaIsKalemiGrubu, $this->isKalemiGruplari);
         $this->degerlendirmeyiOtomatikGuncelle();
         $this->gerceklesmeleriIsle();
         $this->egitimPlanModunuSenkronla();

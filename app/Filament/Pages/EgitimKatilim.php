@@ -20,6 +20,7 @@ use App\Support\EgitimSinavKagidiUretici;
 use App\Support\GeminiIseOzguEgitimUretici;
 use App\Support\IseOzguEgitimKutuphanesi;
 use App\Support\IseOzguSenkron;
+use App\Support\IsKalemiKutuphanesi;
 use App\Support\KatilimciExcelOkuyucu;
 use App\Support\SertifikaUretici;
 use App\Support\SertifikaYildizGrupUretici;
@@ -89,8 +90,8 @@ class EgitimKatilim extends Page
     /** Katılımcı görev süzgeci (ör. Kalıpçı, Sıvacı — boş = tümü). */
     public string $gorevFiltre = '';
 
-    /** Sektör → iş kalemi grubu (config isg.kkd_matris.is_kalemleri anahtarı). Yeni sektör eklenince buraya yazılır. */
-    private const SEKTOR_IS_KALEMLERI = ['insaat' => 'İnşaat / Şantiye'];
+    /** Tüm sektörlerin iş kalemlerini göster/gizle (kapalıyken önce firmanın seçili iş kalemleri, yoksa aktif sektör grubu gösterilir). */
+    public bool $tumIsKalemleriGoster = false;
 
     /** yuz_yuze | uzaktan | karma — formda işaretlenebilir kutu olarak da gösterilir. */
     public string $egitimSekli = 'yuz_yuze';
@@ -216,13 +217,19 @@ class EgitimKatilim extends Page
         return $this->firma?->calisanlar()->orderBy('ad_soyad')->get() ?? collect();
     }
 
-    /** Seçili sektörün iş kalemleri (anahtar => ad); sektörün iş kalemi tanımı yoksa boş (yalnız serbest grup adı). */
+    /**
+     * Çalışan Grubu / İş Kolu seçenekleri (anahtar => ad):
+     *  - Firmada iş kalemleri tanımlıysa öncelikle YALNIZ firmanın seçili iş kalemleri gelir (`$tumIsKalemleriGoster` kapalıyken).
+     *  - Değilse aktif sektörün (İnşaat, İmalat, Gıda/Tarım, Hizmet/Lojistik) iş kalemleri gelir.
+     */
     #[Computed]
     public function isKalemiSecenekleri(): array
     {
-        $grup = self::SEKTOR_IS_KALEMLERI[$this->sektorAnahtari ?: (string) $this->naceSektoru] ?? null;
-
-        return $grup ? collect(config('isg.kkd_matris.is_kalemleri.'.$grup, []))->pluck('ad', 'anahtar')->all() : [];
+        return IsKalemiKutuphanesi::katilimSecenekleri(
+            $this->firma,
+            $this->sektorAnahtari ?: $this->naceSektoru,
+            $this->tumIsKalemleriGoster,
+        );
     }
 
     /** Katılımcı süzgeci seçenekleri: çalışanların şube ve departman adları. @return array<int, string> */
@@ -301,7 +308,12 @@ class EgitimKatilim extends Page
 
     private function isKoluOtomatikAd(): string
     {
-        return collect($this->isKoluKalemleri)->map(fn ($a) => $this->isKalemiSecenekleri[$a] ?? null)->filter()->implode(' + ');
+        $tumu = IsKalemiKutuphanesi::tumu();
+
+        return collect($this->isKoluKalemleri)
+            ->map(fn ($a) => $this->isKalemiSecenekleri[$a] ?? ($tumu[$a]['ad'] ?? null))
+            ->filter()
+            ->implode(' + ');
     }
 
     /** Grup adı elle değişince (kayıtlı o gruba ait önceki konu şablonu varsa) onu yükler. */
@@ -1105,6 +1117,7 @@ class EgitimKatilim extends Page
         $this->sektorElle = false;
         $this->isKolu = '';
         $this->isKoluKalemleri = [];
+        $this->tumIsKalemleriGoster = false;
         $this->calisanFiltre = '';
         $this->gorevFiltre = '';
         $this->secilenCalisanIdler = $this->calisanlar->pluck('id')->all();
