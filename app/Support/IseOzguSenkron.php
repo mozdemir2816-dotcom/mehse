@@ -73,6 +73,9 @@ class IseOzguSenkron
                 if ($buGruptanMi && blank($satir['hedef_kitle'] ?? null)) {
                     $satir['hedef_kitle'] = $isKolu;
                 }
+                if (blank($satir['hedef'] ?? null)) {
+                    $satir['hedef'] = IsKalemiKutuphanesi::hedefOlustur($konu);
+                }
 
                 return $satir;
             }
@@ -89,7 +92,7 @@ class IseOzguSenkron
             return YillikPlan::maddeAylarIle([[
                 'konu' => $konu,
                 'kategori' => 'ise_ozgu',
-                'hedef' => $buGruptanMi ? $isKolu.' çalışanlarına özgü saha riskleri ve korunma önlemleri.' : '',
+                'hedef' => IsKalemiKutuphanesi::hedefOlustur($konu),
                 'hedef_kitle' => $buGruptanMi ? $isKolu : null,
                 'egitici' => IseOzguEgitimKutuphanesi::VARSAYILAN_EGITICI,
                 'hafta' => 2,

@@ -531,7 +531,7 @@ abstract class YillikPlanlar extends Page
             'online_saat' => $onSaat,
             'yuz_yuze_saat' => $yySaat,
             'egitici' => $this->yeniEgitimEgitici,
-            'hedef' => null,
+            'hedef' => IsKalemiKutuphanesi::hedefOlustur((string) $this->yeniEgitimKonu),
             'hedef_kitle' => $this->yeniEgitimHedefKitle,
             'firma_ozel' => $kategori === 'ise_ozgu',
             'aylar' => array_fill(0, 12, 'bos'),
@@ -885,13 +885,18 @@ abstract class YillikPlanlar extends Page
                 $satirlar = $maddeler->map(function (string $konu) use ($mevcutlar, $kilit): array {
                     $norm = EgitimKonulari::normalize($konu);
                     if ($mevcutlar->has($norm)) {
-                        return $mevcutlar[$norm];
+                        $mevcut = $mevcutlar[$norm];
+                        if (blank($mevcut['hedef'] ?? null)) {
+                            $mevcut['hedef'] = IsKalemiKutuphanesi::hedefOlustur($konu);
+                        }
+
+                        return $mevcut;
                     }
 
                     return YillikPlanModel::maddeAylarIle([[
                         'konu' => $konu,
                         'kategori' => 'ise_ozgu',
-                        'hedef' => '',
+                        'hedef' => IsKalemiKutuphanesi::hedefOlustur($konu),
                         'egitici' => IseOzguEgitimKutuphanesi::VARSAYILAN_EGITICI,
                         'hafta' => 2,
                         'varsayilan_aylar' => range(0, 11),

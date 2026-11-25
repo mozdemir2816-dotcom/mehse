@@ -190,7 +190,7 @@ class YillikPlanExcelUretici
         foreach ($maddeler as $i => $m) {
             $r = $ilk + $i;
             $s->setCellValue("B{$r}", $m['konu'] ?? '');
-            $hedefMetin = (string) ($m['hedef'] ?? '');
+            $hedefMetin = IsKalemiKutuphanesi::hedefOlustur((string) ($m['konu'] ?? ''), $m['hedef'] ?? null);
             if (filled($m['hedef_kitle'] ?? null)) {
                 $ekipEtiket = '[EKİP: '.trim((string) $m['hedef_kitle']).']';
                 $hedefMetin = filled($hedefMetin) ? $ekipEtiket.' '.$hedefMetin : $ekipEtiket;

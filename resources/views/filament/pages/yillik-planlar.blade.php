@@ -384,6 +384,12 @@
                                     @if (filled($e['hedef_kitle'] ?? null))
                                         <span style="display:inline-block;margin-left:.35rem;padding:.05rem .45rem;border-radius:9999px;font-size:.66rem;font-weight:700;background:rgb(15 118 110 / .12);color:#0f766e">👷 {{ $e['hedef_kitle'] }}</span>
                                     @endif
+                                    @php
+                                        $satirHedef = \App\Support\IsKalemiKutuphanesi::hedefOlustur((string) ($e['konu'] ?? ''), $e['hedef'] ?? null);
+                                    @endphp
+                                    @if (filled($satirHedef))
+                                        <div style="font-weight:400;font-size:.68rem;color:rgb(100 116 139);margin-top:.12rem;line-height:1.25">{{ \Illuminate\Support\Str::limit($satirHedef, 140) }}</div>
+                                    @endif
                                 </td>
                                 <td style="padding:.3rem .4rem;white-space:nowrap">
                                     <button type="button"

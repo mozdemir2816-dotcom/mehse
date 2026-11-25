@@ -224,4 +224,90 @@ class IsKalemiKutuphanesi
 
         return $satirlar;
     }
+
+    /**
+     * Eğitim konusu için boş bırakılan "Eğitimin Hedefi" (Excel C sütunu) metnini
+     * iş kalemi kütüphanesi, standart şablon ve hazır İSG hedef sözlüğünden otomatik üretir.
+     * Mevcut hedef doluysa olduğu gibi korunur.
+     */
+    public static function hedefOlustur(string $konu, ?string $mevcutHedef = null): string
+    {
+        $mevcut = trim((string) $mevcutHedef);
+        if ($mevcut !== '') {
+            return $mevcut;
+        }
+
+        $temizKonu = trim($konu);
+        if ($temizKonu === '') {
+            return '';
+        }
+
+        $norm = EgitimKonulari::normalize($temizKonu);
+
+        // 1) İş kalemi kütüphanesinde doğrudan eşleşme
+        foreach (static::tumu() as $k) {
+            if (EgitimKonulari::normalize($k['ad']) === $norm && trim($k['egitim_konusu']) !== '') {
+                return trim($k['egitim_konusu']);
+            }
+        }
+
+        // 2) Standart yıllık plan şablonunda eşleşme
+        foreach (config('yillik_plan_sablonu.egitimler', []) as $e) {
+            if (EgitimKonulari::normalize((string) ($e['konu'] ?? '')) === $norm && trim((string) ($e['hedef'] ?? '')) !== '') {
+                return trim((string) $e['hedef']);
+            }
+        }
+
+        // 3) Yaygın sektör / şantiye / asansör / atölye konuları için hazır İSG hedefleri
+        $sozluk = [
+            'iskele ve kalip guvenligi' => 'Cephe, mobil ve kalıp altı iskelelerin standartlara uygun kurulum-söküm ve kontrol kurallarını, kalıp montaj-demontajında düşme ve devrilme önlemlerini öğretmek.',
+            'yuksekte calisma onlemleri' => 'Yüksekte çalışmada toplu koruma (korkuluk, güvenlik ağı), yaşam hattı, tam vücut emniyet kemeri ve güvenli erişim kurallarıyla düşme kazalarını önlemek.',
+            'yuksekte calisma ve dusmeyi onleme' => 'Yüksekte çalışmada toplu koruma (korkuluk, güvenlik ağı), yaşam hattı, tam vücut emniyet kemeri ve güvenli erişim kurallarıyla düşme kazalarını önlemek.',
+            'yuksekte guvenli calisma ve dusmeyi durdurma donanimlari' => 'Yüksekte çalışmalarda ankraj, yaşam hattı ve tam vücut emniyet kemerinin doğru seçim, kontrol ve kullanım kurallarını sahada uygulamak.',
+            'kazi islerinde guvenlik' => 'Kazı ve hafriyatta şevlendirme, iksa/shoring, yeraltı tesisat tespiti, su tahliyesi ve kazı kenarı düşme-göçük önlemlerini uygulamak.',
+            'kazi ve zemin isleri' => 'Kazı, hafriyat ve zemin iyileştirme işlerinde şevlendirme, iksa, göçük önleme, yeraltı hat tespiti ve ağır makine çevre güvenliğini sağlamak.',
+            'agir is makinesi kullanimi' => 'Ekskavatör, beko loder, yükleyici, silindir ve kamyonlarla çalışmada kör nokta, işaretçi-manevra, saha hızı ve yaya-araç ayrımı kurallarını uygulamak.',
+            'dusen nesne tehlikesi' => 'Kat kenarlarında malzeme istif yasağı, eteklik/ağ/yakalama platformu, alet bağlama ve baret kullanımıyla yüksekten malzeme düşmesi kazalarını önlemek.',
+            'iskele guvenligi ve platform kurallari' => 'Sabit, mobil ve asma iskeleler ile çalışma platformlarının kurulum, yük sınırı, korkuluk, tekerlek kilidi ve günlük kontrol kurallarını uygulamak.',
+            'iskelede guvenli calisma' => 'Cephe ve mobil iskelelerde güvenli çıkma-inme, korkuluk ve platform tamlığı, yükleme sınırları ve yüksekten düşmeye karşı korunma kurallarını öğretmek.',
+            'manlift iskele guvenli kullanimi' => 'Makaslı/eklemli personel yükseltici platform (manlift) ve iskelelerin zemin kontrolü, aşırı yük koruması, emniyet kemeri bağlantısı ve güvenli kullanım kurallarını uygulamak.',
+            'el aletleri ve elektrik guvenligi' => 'Elektrikli/şarjlı el aletlerinin koruyucuları, topraklama, kaçak akım rölesi (30 mA), seyyar kablo düzeni ve güvenli kullanım kurallarıyla çarpılma ve yaralanmaları önlemek.',
+            'kimyasal ve toz maruziyeti riskleri' => 'Boya, tiner, solvent, yapıştırıcı ve tozlu çalışmalarda GBF/SDS okuma, lokal/genel havalandırma, solunum maskesi ve göz-cilt koruma kurallarını uygulamak.',
+            'insaattaki riskler' => 'Şantiyedeki temel tehlikeleri (boşluklar, kat kenarları, merdiven/asansör şaftları, elektrik, düşen malzeme ve saha trafiği) tanıyarak toplu ve kişisel koruma önlemlerini uygulamak.',
+            'kalip islerine ozgu riskler ve guvenli calisma' => 'Kalıp montaj-demontajında teleskopik dikme, yatar daire testere koruyucuları, çivi/kesici el aletleri ve geçici kenar koruma kurallarını uygulamak.',
+            'demir donati islerine ozgu riskler ve guvenli calisma' => 'Demir kesme-bükme makineleri, spiral taşlama, filiz demiri başlık koruması, ergonomik taşıma ve göz-el KKD kurallarıyla kesilme ve batma kazalarını önlemek.',
+            'elektrik ve saha tertip duzeni' => 'Şantiye geçici elektrik panoları, kaçak akım rölesi, kablo askılama, aydınlatma ve düzenli malzeme istifleme ile çarpılma, takılma ve yangın risklerini önlemek.',
+            'kaldirma tasima ve vinc ile iletisim' => 'Kule/mobil vinç ve kaldırma ekipmanlarında sapan-kanca kontrolü, yük dengesi, askıda yük altına girmeme ve standart işaretçi iletişimi kurallarını uygulamak.',
+            'yuk kaldirma tasima ve askilama guvenligi' => 'Kaldırma-iletme ekipmanları, sapan ve mapaların kontrolü, güvenli yük bağlama ve askıda yük çevresinde emniyet kurallarını uygulamak.',
+            'kaynak islerinden guvenli calisma' => 'Kaynak, kesme ve taşlama işlerinde sıcak iş izni, yangın önlemleri, tüp güvenliği, kaynak dumanı havalandırması ve UV/IR maske-eldiven kullanımını sağlamak.',
+            'servis araclari guvenli surusu ve seyir guvenligi' => 'Servis ve saha araçlarının güvenli sürüş, hız sınırları, emniyet kemeri, malzeme sabitleme, araç bakım ve trafik güvenliği kurallarını uygulamak.',
+            'kapali kisitli alan tehlikeleri ve ergonomi' => 'Kapalı/kısıtlı alanlarda giriş izni, havalandırma, gaz ölçümü, gözetmen bulundurma ile ergonomik duruş ve güvenli elle taşıma tekniklerini uygulamak.',
+            'enerji izolasyonu ve elektriksel tehlikeler loto' => 'Bakım-onarım ve servis sırasında elektrik/mekanik enerjinin kesilmesi, kilitleme-etiketleme (EKED/LOTO), enerjisizlik kontrolü ve yalıtkan KKD kurallarını uygulamak.',
+            'yuruyen merdiven ve bantlara ozgu riskler' => 'Yürüyen merdiven ve yürüyen bant bakım-onarımında alan bariyerleme, kuyu/makine dairesi güvenliği, sıkışma-kapılma önlemleri ve enerji kesme kurallarını uygulamak.',
+            'kuyu ici ve kabin ustu guvenli calisma prensipleri' => 'Asansör kuyusu ve kabin üstünde revizyon kumandası, güvenlik boşluğu, düşme-sıkışma koruması, durdurma anahtarı ve haberleşme kurallarını uygulamak.',
+        ];
+
+        if (isset($sozluk[$norm])) {
+            return $sozluk[$norm];
+        }
+
+        // Kısmi eşleşme (ör. "İnşaat Genel Tehlikeleri: Boşlukların tehlikeli olduğu..." veya "Boya/tiner buharına...")
+        if (str_contains($norm, 'insaat genel tehlikeleri') || str_contains($norm, 'bosluklarin tehlikeli')) {
+            return 'Şantiyede merdiven ve asansör boşlukları, tesisat/döşeme açıklıkları ve açık kat kenarlarındaki düşme tehlikesini kavratmak; korkuluk, kapak, güvenlik ağı ve koruyucuları sökmeme kurallarını uygulamak.';
+        }
+        if (str_contains($norm, 'boya') && str_contains($norm, 'tiner')) {
+            return 'Boya, tiner ve solvent buharı maruziyetine karşı havalandırma ve uygun filtreli maske kullanımını, sıva/boya ekipmanları ile yüksekte çalışmada düşme önlemlerini uygulamak.';
+        }
+        if (str_contains($norm, 'taslama') || str_contains($norm, 'matkab') || str_contains($norm, 'matakab')) {
+            return 'Taşlama makinesi, el matkabı ve elektrikli el aletlerinde koruyucu siperlik, uygun disk/uç seçimi, elektrik-kablo kontrolü, çapak sıçramasına karşı gözlük/siperlik ve güvenli çalışma kurallarını uygulamak.';
+        }
+        if (str_contains($norm, 'lazer kesim') || str_contains($norm, 'spiral kanal') || str_contains($norm, 'flash')) {
+            return 'Flanş şekillendirme, lazer kesim ve spiral kanal makinelerinde koruyucu kapak/sensör, sac kenarı kesilme önlemleri, göz-el KKD kullanımı ve acil durdurma kurallarını uygulamak.';
+        }
+
+        // Genel otomatik hedef (her yeni özel konu için düzgün Türkçe cümle)
+        $baslik = rtrim($temizKonu, '.');
+
+        return $baslik.' kapsamındaki tehlike ve riskleri tanımak, alınacak toplu/kişisel korunma önlemleri ile güvenli çalışma kurallarını sahada uygulamak.';
+    }
 }

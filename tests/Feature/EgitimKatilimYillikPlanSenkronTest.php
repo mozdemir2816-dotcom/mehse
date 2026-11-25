@@ -743,5 +743,24 @@ class EgitimKatilimYillikPlanSenkronTest extends TestCase
         $this->assertStringContainsString('boşlukların tehlikeli olduğu', mb_strtolower($maddeler[0]['madde']));
         $this->assertStringContainsString('asansör şaftları', mb_strtolower($maddeler[0]['madde']));
         $this->assertSame(180, collect($maddeler)->sum('dakika'));
+
+        // 4) Gruba göre doldurma, elle ekleme ve Excel çıktısında "Eğitimin Hedefi" (C sütunu) asla boş kalmaz!
+        $planSayfa = Livewire::test(YillikEgitimPlani::class)
+            ->set('firmaId', $santiye->id)
+            ->set('yil', 2027)
+            ->set('firmaEgitimGrubu', 'insaat')
+            ->call('firmaEgitimGrubunuUygula', true)
+            ->set('yeniEgitimKategori', 'ise_ozgu')
+            ->set('yeniEgitimKonu', 'Taşlama makinesi ve el matkabı güvenliği')
+            ->call('egitimEkle');
+
+        $guncelPlan = YillikPlan::where('firma_id', $santiye->id)->where('yil', 2027)->firstOrFail();
+        $ozguSatirlar = collect($guncelPlan->egitimler)->where('kategori', 'ise_ozgu')->values();
+        $this->assertTrue($ozguSatirlar->every(fn ($e) => filled(trim((string) ($e['hedef'] ?? '')))), 'Tüm 4. bölüm satırlarının eğitim hedefi dolu olmalı');
+
+        $excel = YillikPlanExcelUretici::egitimDoldur($guncelPlan)->getSheet(0);
+        for ($r = 28; $r < 28 + $ozguSatirlar->count(); $r++) {
+            $this->assertNotSame('', trim((string) $excel->getCell("C{$r}")->getValue()), "Excel C{$r} hedef sütunu boş olmamalı");
+        }
     }
 }

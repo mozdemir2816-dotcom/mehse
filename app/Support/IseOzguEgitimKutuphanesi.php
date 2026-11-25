@@ -215,7 +215,7 @@ class IseOzguEgitimKutuphanesi
         $satir = [
             'konu' => $konu['ad'],
             'kategori' => 'ise_ozgu',
-            'hedef' => $konu['hedef'],
+            'hedef' => IsKalemiKutuphanesi::hedefOlustur((string) $konu['ad'], $konu['hedef'] ?? null),
             'egitici' => $konu['egitici'] ?: self::VARSAYILAN_EGITICI,
             'hafta' => 2,
             'varsayilan_aylar' => range(0, 11),
