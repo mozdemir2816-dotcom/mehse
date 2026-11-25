@@ -371,4 +371,82 @@ class EgitimKatilimYillikPlanSenkronTest extends TestCase
         $this->assertCount(3, $ozgu);
         $this->assertEqualsWithDelta(4.0, (float) $ozgu->sum('yuz_yuze_saat'), 0.01);
     }
+
+    public function test_kutuphaneden_silinen_ai_konusu_yillik_plandan_da_silinir_ve_toplu_ai_planlama_katilima_aktarilir(): void
+    {
+        config(['services.gemini.key' => 'test-key-456']);
+
+        $f1 = Firma::factory()->for($this->uzman)->create(['unvan' => 'Metal A', 'tehlike_sinifi' => 'tehlikeli', 'nace_kodu' => '25.62.01']);
+        $f2 = Firma::factory()->for($this->uzman)->create(['unvan' => 'Metal B', 'tehlike_sinifi' => 'cok_tehlikeli', 'nace_kodu' => '25.62.02']);
+
+        // 1) Kütüphaneye özel bir konu ekleyip yıllık plana yerleştir, sonra kütüphaneden sil → yıllık plandan da silinmeli!
+        $ozel = IseOzguEgitimKonusu::create([
+            'user_id' => $this->uzman->id,
+            'ad' => 'Silinecek Eski AI Konusu',
+            'nace_onekleri' => ',25,',
+        ]);
+        $plan1 = YillikPlan::firmaYilIcin($f1, (int) now()->year);
+        $this->assertContains('Silinecek Eski AI Konusu', collect($plan1->egitimler)->pluck('konu')->all());
+
+        Livewire::test(IseOzguEgitimKonulari::class)
+            ->call('kaldir', 'ozel_'.$ozel->id)
+            ->assertNotified();
+
+        $this->assertNotContains('Silinecek Eski AI Konusu', collect($plan1->fresh()->egitimler)->pluck('konu')->all());
+        $this->assertEqualsWithDelta(4.0, (float) collect($plan1->fresh()->egitimler)->where('kategori', 'ise_ozgu')->sum('yuz_yuze_saat'), 0.01);
+
+        // 2) AI ile Tüm Firmaları Planla: aynı iş grubundaki Metal A (Tehlikeli) & Metal B (Çok Tehlikeli) tek API çağrısıyla planlanır
+        Http::fake([
+            'generativelanguage.googleapis.com/*' => Http::response([
+                'candidates' => [[
+                    'content' => [
+                        'parts' => [[
+                            'text' => json_encode([
+                                ['ad' => 'Giyotin Makas ve Abkant Güvenliği', 'hedef' => 'Işık perdesi ve çift el kumanda.', 'egitici' => 'İŞ GÜVENLİĞİ UZMANI'],
+                                ['ad' => 'Gazaltı Kaynak Dumanı Kontrolü', 'hedef' => 'Lokal emiş ve maske kullanımı.', 'egitici' => 'İŞ GÜVENLİĞİ UZMANI'],
+                                ['ad' => 'Tavan Vinci Kaldırma Aksesuarları', 'hedef' => 'Sapan ve kanca kontrolü.', 'egitici' => 'İŞ GÜVENLİĞİ UZMANI'],
+                                ['ad' => 'Taşlama ve Çapak Sıçraması Önlemleri', 'hedef' => 'Siperlik ve devir kontrolü.', 'egitici' => 'İŞ GÜVENLİĞİ UZMANI'],
+                            ], JSON_UNESCAPED_UNICODE),
+                        ]],
+                    ],
+                ]],
+            ], 200),
+        ]);
+
+        Livewire::test(YillikEgitimPlani::class)
+            ->set('firmaId', $f1->id)
+            ->set('yil', (int) now()->year)
+            ->callAction('aiTopluFirmaPlanla', [
+                'kapsam' => 'tumu',
+                'adet' => 4,
+                'mod' => 'karma_lms',
+            ])
+            ->assertNotified();
+
+        // Aynı iş grubu olduğu için 2 firmaya rağmen yalnız 1 API çağrısı yapılmış olmalı
+        Http::assertSentCount(1);
+
+        // Eğitim Katılım açıldığında Metal A'da Yıllık Plandaki tam 4 konu ve tam 540 dk (12 saat = 90+90+180+180) gelmeli!
+        $sayfa = Livewire::test(EgitimSayfasi::class)->set('firmaId', $f1->id);
+        $icerik = $sayfa->get('icerik');
+        $ozguAdlar = collect($icerik['isyerine_ozgu']['maddeler'])->pluck('madde')->all();
+        $this->assertSame([
+            'Giyotin Makas ve Abkant Güvenliği',
+            'Gazaltı Kaynak Dumanı Kontrolü',
+            'Tavan Vinci Kaldırma Aksesuarları',
+            'Taşlama ve Çapak Sıçraması Önlemleri',
+        ], $ozguAdlar);
+        $toplamFiili = collect($icerik['genel_konular'])->sum('dakika')
+            + collect($icerik['saglik_konulari'])->sum('dakika')
+            + collect($icerik['teknik_konular'])->sum('dakika')
+            + collect($icerik['isyerine_ozgu']['maddeler'])->sum('dakika');
+        $this->assertSame(540, $toplamFiili, 'Tehlikeli 12 saat = tam 540 dk fiili olmalı (eski/yeni karışmamalı)');
+        $this->assertSame(180, collect($icerik['isyerine_ozgu']['maddeler'])->sum('dakika'));
+
+        // Ekrandan 1 konu silindiğinde toplam hâlâ tam 180 dk kalır (60+60+60) ve silinen konu geri gelmez!
+        $sayfa->call('isyerineOzguMaddeCikar', 0);
+        $sonra = $sayfa->get('icerik')['isyerine_ozgu']['maddeler'];
+        $this->assertCount(3, $sonra);
+        $this->assertSame([60, 60, 60], collect($sonra)->pluck('dakika')->all());
+    }
 }

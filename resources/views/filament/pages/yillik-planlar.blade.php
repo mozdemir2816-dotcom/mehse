@@ -382,10 +382,11 @@
 
                 <div style="margin-top:.75rem;display:flex;gap:.4rem;flex-wrap:wrap;align-items:center">
                     <x-filament::button size="xs" color="primary" icon="heroicon-o-queue-list" wire:click="mountAction('iseOzguSec')">İşe Özgü Konuları Seç</x-filament::button>
-                    <x-filament::button size="xs" color="info" icon="heroicon-o-sparkles" wire:click="mountAction('aiIseOzguUret')">✨ AI ile 4. Bölüm Üret</x-filament::button>
+                    <x-filament::button size="xs" color="info" icon="heroicon-o-sparkles" wire:click="mountAction('aiIseOzguUret')">✨ AI ile Bu Firmanın 4. Bölümünü Planla</x-filament::button>
+                    <x-filament::button size="xs" color="success" icon="heroicon-o-building-office-2" wire:click="mountAction('aiTopluFirmaPlanla')">✨ AI ile Tüm Firmaları Planla</x-filament::button>
                     <x-filament::button size="xs" color="gray" tag="a" :href="\App\Filament\Pages\IseOzguEgitimKonulari::getUrl(['firmaId' => $this->firmaId])">Konu kütüphanesi</x-filament::button>
                     <x-filament::button size="xs" color="gray" wire:click="varsayilanaSifirla">Varsayılana Sıfırla</x-filament::button>
-                    <span class="mehse-soluk">Konu eklendikçe/silindikçe satır saatleri toplam eğitim süresine göre otomatik güncellenir; ★ ile kütüphaneye kaydedebilirsiniz.</span>
+                    <span class="mehse-soluk">Ana kaynak Yıllık Eğitim Planıdır: burada planlanan 4. bölüm ve süreler Eğitim Katılım, Boş Form ve Sertifikalara birebir aktarılır.</span>
                 </div>
             </x-filament::section>
         @endif

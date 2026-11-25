@@ -791,14 +791,14 @@ abstract class YillikPlanlar extends Page
     {
         return Action::make('aiIseOzguUret')
             ->label('✨ AI ile 4. Bölüm Üret')
-            ->modalHeading('✨ Yapay Zekâ (API) ile 4. Bölüm Konuları Üret')
-            ->modalDescription('Firmanın sektörüne/NACE koduna ve ekibine özel 4. Bölüm konularını üretir; toplam eğitim süresine göre satır saatlerini otomatik yeniden dağıtır.')
+            ->modalHeading('✨ Yapay Zekâ (API) ile Bu Firmanın 4. Bölümünü Planla')
+            ->modalDescription('Firmanın sektörüne/NACE koduna ve ekibine özel 4. Bölüm konularını üretir; toplam eğitim süresine göre satır saatlerini sıfırdan yeniden dağıtır. Eğitim Katılım, Boş Form ve Sertifikalar doğrudan bu plandan beslenir.')
             ->modalSubmitActionLabel('Üret ve Plana Uygula')
             ->fillForm(fn () => [
                 'sektor' => ($this->firma ? IseOzguSenkron::etkinGrup($this->firma) : null) ?: 'insaat',
                 'adet' => 5,
-                'ekleme_sekli' => 'ekle',
-                'kutuphaneye_kaydet' => true,
+                'ekleme_sekli' => 'degistir',
+                'kutuphaneye_kaydet' => false,
             ])
             ->schema([
                 \Filament\Forms\Components\Select::make('sektor')
@@ -822,15 +822,15 @@ abstract class YillikPlanlar extends Page
                     Radio::make('ekleme_sekli')
                         ->label('Uygulama Şekli')
                         ->options([
+                            'degistir' => '4. bölümü yenileriyle değiştir (önerilen — eski/yeni karışmaz)',
                             'ekle' => 'Mevcut 4. bölümün üzerine ekle',
-                            'degistir' => '4. bölümü yenileriyle değiştir',
                         ])
-                        ->default('ekle')
+                        ->default('degistir')
                         ->required(),
                 ]),
                 Toggle::make('kutuphaneye_kaydet')
-                    ->label('İşe Özgü Eğitim Kütüphanesi\'ne de kaydet (aynı sektördeki diğer firmalar için)')
-                    ->default(true),
+                    ->label('İşe Özgü Eğitim Kütüphanesi\'ne de kaydet (kapalıysa yalnız bu firmanın planında kalır)')
+                    ->default(false),
             ])
             ->action(function (array $data): void {
                 $p = $this->plan();
@@ -861,7 +861,18 @@ abstract class YillikPlanlar extends Page
                 }
 
                 $kilit = $this->kilitAyIndeksi();
-                $mevcutlar = ($data['ekleme_sekli'] ?? 'ekle') === 'degistir'
+                // Mevcut G (tamamlandi) aylarını konu adına göre koru
+                $mevcutG = [];
+                foreach (collect($p->egitimler ?? [])->where('kategori', 'ise_ozgu') as $m) {
+                    $norm = EgitimKonulari::normalize((string) ($m['konu'] ?? ''));
+                    foreach (($m['aylar'] ?? []) as $ay => $durum) {
+                        if ($durum === 'tamamlandi') {
+                            $mevcutG[$norm][$ay] = true;
+                        }
+                    }
+                }
+
+                $mevcutlar = ($data['ekleme_sekli'] ?? 'degistir') === 'degistir'
                     ? collect()
                     : collect($p->egitimler ?? [])->where('kategori', 'ise_ozgu')->values();
 
@@ -873,7 +884,7 @@ abstract class YillikPlanlar extends Page
                         continue;
                     }
 
-                    $mevcutlar->push(YillikPlanModel::maddeAylarIle([[
+                    $satir = YillikPlanModel::maddeAylarIle([[
                         'konu' => $k['ad'],
                         'kategori' => 'ise_ozgu',
                         'hedef' => $k['hedef'],
@@ -881,7 +892,13 @@ abstract class YillikPlanlar extends Page
                         'egitici' => $k['egitici'],
                         'hafta' => 2,
                         'varsayilan_aylar' => range(0, 11),
-                    ]], $kilit)[0]);
+                    ]], $kilit)[0];
+
+                    foreach (($mevcutG[$norm] ?? []) as $ay => $_) {
+                        $satir['aylar'][$ay] = 'tamamlandi';
+                    }
+
+                    $mevcutlar->push($satir);
                     $mevcutAdlar->put($norm, true);
                 }
 
@@ -897,8 +914,152 @@ abstract class YillikPlanlar extends Page
                 }
 
                 Notification::make()
-                    ->title(count($sonuc['konular']).' konu 4. bölüme eklendi ve süreler güncellendi')
-                    ->body($kaydedilen > 0 ? "{$kaydedilen} konu kütüphaneye de kaydedildi." : '4. bölüm saatleri toplam eğitim süresine göre otomatik yeniden dağıtıldı.')
+                    ->title(count($sonuc['konular']).' konu 4. bölüme uygulandı ve süreler yeniden dağıtıldı')
+                    ->body($kaydedilen > 0 ? "{$kaydedilen} konu kütüphaneye de kaydedildi." : 'Eğitim Katılım Formu ve Boş Form artık doğrudan bu planı kullanır.')
+                    ->success()
+                    ->send();
+            });
+    }
+
+    /**
+     * Portföydeki tüm (veya seçili) firmaların yıllık eğitim planlarını sektör/Gerçek İş Grubuna göre
+     * AI ile tek seferde planlar; aynı iş grubundaki firmalar aynı 4. bölüm konularını paylaşır, her firmanın
+     * tehlike sınıfı saatleri ve tamamlanmış G ayları korunur.
+     */
+    public function aiTopluFirmaPlanlaAction(): Action
+    {
+        return Action::make('aiTopluFirmaPlanla')
+            ->label('✨ AI ile Tüm Firmaları Planla')
+            ->modalHeading('✨ AI ile Firmaların Yıllık Eğitim Planlarını Toplu Planla')
+            ->modalDescription('Her firmanın NACE / Gerçek İş Grubuna göre 4. Bölüm konularını AI ile üretir, Karma (Online + Yüz Yüze) saatlerini dağıtır. Aynı iş grubundaki firmalar tek API çağrısıyla birebir aynı 4. bölümü alır; Eğitim Katılım, Boş Form ve Sertifikalar doğrudan bu planlardan beslenir.')
+            ->modalSubmitActionLabel('Toplu Planlamayı Başlat')
+            ->schema([
+                Radio::make('kapsam')
+                    ->label('Hangi Firmalar Planlansın?')
+                    ->options([
+                        'tumu' => 'Tüm aktif firmalarım',
+                        'secili' => 'Seçeceğim firmalar',
+                    ])
+                    ->default('tumu')
+                    ->live()
+                    ->required(),
+                \Filament\Forms\Components\Select::make('firma_idler')
+                    ->label('Firmalar')
+                    ->multiple()
+                    ->searchable()
+                    ->options(fn () => $this->firmalar)
+                    ->visible(fn ($get) => ($get('kapsam') ?? 'tumu') === 'secili')
+                    ->required(fn ($get) => ($get('kapsam') ?? 'tumu') === 'secili'),
+                Grid::make(2)->schema([
+                    \Filament\Forms\Components\Select::make('adet')
+                        ->label('Firma / Grup Başına 4. Bölüm Konu Sayısı')
+                        ->options([4 => '4 konu', 5 => '5 konu', 6 => '6 konu'])
+                        ->default(5)
+                        ->required(),
+                    \Filament\Forms\Components\Select::make('mod')
+                        ->label('Online / Yüz Yüze Planlama Modu')
+                        ->options(YillikEgitimPlanlayici::MODLAR)
+                        ->default(YillikEgitimPlanlayici::VARSAYILAN_MOD)
+                        ->required(),
+                ]),
+            ])
+            ->action(function (array $data): void {
+                $userId = (int) Filament::auth()->id();
+                $sorgu = Firma::query()->where('user_id', $userId)->where('aktif', true)->orderBy('unvan');
+                if (($data['kapsam'] ?? 'tumu') === 'secili') {
+                    $sorgu->whereIn('id', array_map('intval', (array) ($data['firma_idler'] ?? [])));
+                }
+                $firmalar = $sorgu->get();
+
+                if ($firmalar->isEmpty()) {
+                    Notification::make()->title('Planlanacak firma bulunamadı')->warning()->send();
+
+                    return;
+                }
+
+                $adet = (int) ($data['adet'] ?? 5);
+                $mod = (string) ($data['mod'] ?? YillikEgitimPlanlayici::VARSAYILAN_MOD);
+                $sektorler = GeminiIseOzguEgitimUretici::sektorSecenekleri();
+                $grupOnbellek = [];
+                $planlanan = 0;
+                $hatalar = [];
+
+                foreach ($firmalar as $firma) {
+                    $etkinGrup = IseOzguSenkron::etkinGrup($firma);
+                    $cacheAnahtar = $etkinGrup ?: ('nace_'.substr(preg_replace('/\D/', '', (string) $firma->nace_kodu), 0, 4) ?: 'genel_'.$firma->id);
+
+                    if (! array_key_exists($cacheAnahtar, $grupOnbellek)) {
+                        $sektorAd = $etkinGrup
+                            ? ($sektorler[$etkinGrup] ?? $etkinGrup)
+                            : ($firma->faaliyet_alani ?: 'Genel İşyeri (NACE '.($firma->nace_kodu ?: '—').')');
+                        $nace = $etkinGrup
+                            ? GeminiIseOzguEgitimUretici::sektorNaceOnekleri($etkinGrup, $firma->nace_kodu)
+                            : $firma->nace_kodu;
+
+                        $sonuc = GeminiIseOzguEgitimUretici::uret($sektorAd, $nace, $firma->tehlike_sinifi, null, null, $adet);
+                        $grupOnbellek[$cacheAnahtar] = $sonuc;
+                    }
+
+                    $sonuc = $grupOnbellek[$cacheAnahtar];
+                    if ($sonuc['hata'] !== null || $sonuc['konular'] === []) {
+                        $hatalar[] = $firma->unvan.': '.($sonuc['hata'] ?? 'konu üretilemedi');
+
+                        continue;
+                    }
+
+                    $plan = YillikPlanModel::firmaYilIcin($firma, $this->yil);
+                    $kilit = $firma->planKilitAyIndeksi($this->yil);
+
+                    $mevcutG = [];
+                    foreach (collect($plan->egitimler ?? [])->where('kategori', 'ise_ozgu') as $m) {
+                        $norm = EgitimKonulari::normalize((string) ($m['konu'] ?? ''));
+                        foreach (($m['aylar'] ?? []) as $ay => $durum) {
+                            if ($durum === 'tamamlandi') {
+                                $mevcutG[$norm][$ay] = true;
+                            }
+                        }
+                    }
+
+                    $yeniOzgu = [];
+                    foreach ($sonuc['konular'] as $k) {
+                        $norm = EgitimKonulari::normalize($k['ad']);
+                        $satir = YillikPlanModel::maddeAylarIle([[
+                            'konu' => $k['ad'],
+                            'kategori' => 'ise_ozgu',
+                            'hedef' => $k['hedef'],
+                            'egitici' => $k['egitici'],
+                            'hafta' => 2,
+                            'varsayilan_aylar' => range(0, 11),
+                        ]], $kilit)[0];
+
+                        foreach (($mevcutG[$norm] ?? []) as $ay => $_) {
+                            $satir['aylar'][$ay] = 'tamamlandi';
+                        }
+                        $yeniOzgu[] = $satir;
+                    }
+
+                    $tum = YillikPlanSablonu::iseOzguYerlestir($plan->egitimler ?? [], $yeniOzgu);
+                    $tum = YillikEgitimPlanlayici::satirlaraUygula($tum, $firma, $mod);
+                    $plan->update(['egitimler' => $tum]);
+                    $planlanan++;
+                }
+
+                unset($this->plan);
+                $this->egitimPlanModunuSenkronla();
+
+                if ($planlanan === 0) {
+                    Notification::make()
+                        ->title('Toplu planlama yapılamadı')
+                        ->body(implode(' | ', array_slice($hatalar, 0, 3)))
+                        ->danger()
+                        ->send();
+
+                    return;
+                }
+
+                Notification::make()
+                    ->title("{$planlanan} firmanın {$this->yil} Yıllık Eğitim Planı AI ile hazırlandı")
+                    ->body('Aynı iş grubundaki firmalar aynı 4. bölüm konularını aldı; Eğitim Katılım, Boş Form ve Sertifikalar doğrudan bu planlardan beslenir.')
                     ->success()
                     ->send();
             });

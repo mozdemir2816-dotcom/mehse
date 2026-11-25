@@ -27,11 +27,11 @@ class EgitimFirmaIcerigi
         $sinif = $firma->tehlike_sinifi ?: 'az_tehlikeli';
         // 4. bölüm fiili dk: Az Tehlikeli 2s (90 dk), Tehlikeli 4s (180 dk), Çok Tehlikeli 4s (180 dk).
         $blokDk = in_array($sinif, ['tehlikeli', 'cok_tehlikeli'], true) ? 180 : 90;
-        $dakika = max(1, (int) round($blokDk / $konular->count()));
+        $maddeler = $konular->map(fn (string $k) => ['madde' => $k, 'dakika' => 15, 'dahil' => true])->all();
 
         return [
             'sektor' => 'Firmaya özgü ('.$yil.' Yıllık Eğitim Planı)',
-            'maddeler' => $konular->map(fn (string $k) => ['madde' => $k, 'dakika' => $dakika, 'dahil' => true])->all(),
+            'maddeler' => EgitimIcerikOlusturucu::bolumDakikalariniDagit($maddeler, $blokDk),
         ];
     }
 
@@ -77,11 +77,22 @@ class EgitimFirmaIcerigi
 
         $mevcut = collect($icerik['isyerine_ozgu']['maddeler'])->pluck('madde')->map(fn ($m) => mb_strtolower(trim((string) $m)))->all();
 
+        $eklendi = false;
         foreach ($firmaKonulari as $konu) {
             if (! in_array(mb_strtolower($konu), $mevcut, true)) {
                 $icerik['isyerine_ozgu']['maddeler'][] = ['madde' => $konu, 'dakika' => 10, 'dahil' => true];
                 $mevcut[] = mb_strtolower($konu);
+                $eklendi = true;
             }
+        }
+
+        if ($eklendi) {
+            $sinif = $firma->tehlike_sinifi ?: 'az_tehlikeli';
+            $blokDk = in_array($sinif, ['tehlikeli', 'cok_tehlikeli'], true) ? 180 : 90;
+            $icerik['isyerine_ozgu']['maddeler'] = EgitimIcerikOlusturucu::bolumDakikalariniDagit(
+                $icerik['isyerine_ozgu']['maddeler'],
+                $blokDk,
+            );
         }
 
         return $icerik;

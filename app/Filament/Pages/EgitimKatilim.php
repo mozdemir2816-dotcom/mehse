@@ -397,7 +397,7 @@ class EgitimKatilim extends Page
             $this->icerik = $this->konuIcerigiBirlestir($taze, $onceki);
             $this->oncekidenYuklendi = true;
             // Firma geneli (ekip seçilmemiş) temel eğitimde, firmanın bu yılki Yıllık Eğitim Planı varsa
-            // 4. bölüm Yıllık Eğitim Planı ile birebir senkron tutulur.
+            // 4. bölüm Yıllık Eğitim Planı ile birebir senkron tutulur (plandan silinen konu geri gelmez).
             if ($this->baslikAnahtari === 'genel' && $this->isKolu === '' && $this->firma) {
                 $this->planOzguBolumunuKur();
             }
@@ -431,6 +431,12 @@ class EgitimKatilim extends Page
         $this->dersSaati = $this->icerik['saat'] ?? null;
         if ($this->egitimSekli === 'karma' && $yuzYuze !== null) {
             $this->dersSaati = $yuzYuze;
+        }
+
+        // Yıllık Eğitim Planından gelen 4. bölüm varsa (Tehlikeli 4s = 180 dk), tüm 4 bloğun dakikalarını
+        // toplam ders saatine tam eşitle ki eski/yeni dakika toplamları karışmasın.
+        if ($this->baslikAnahtari === 'genel' && $this->egitimSekli === 'yuz_yuze' && str_contains((string) ($this->icerik['isyerine_ozgu']['sektor'] ?? ''), 'Yıllık Eğitim Planı')) {
+            $this->tumBlokSureleriniDagit();
         }
 
         $this->sureGunYenile();
@@ -802,24 +808,19 @@ class EgitimKatilim extends Page
             return (int) round(($bazBlok / $bazToplam) * $etkinToplam * 45);
         }
 
-        // Tamamı Yüz Yüze: toplam ders saati aktif (dahil konusu bulunan) 4 blok arasında eşit bölünür.
+        // Tamamı Yüz Yüze: Yıllık Eğitim Planı bölüm dağılımı oranlarıyla (Tehlikeli: 2+2+4+4=12s; Tekrar: 1+1+2+4=8s;
+        // Çok Tehlikeli: 2+3+7+4=16s; Az Tehlikeli: 2+2+2+2=8s) toplam ders saatine tam dağıtılır.
+        $bazToplam = (float) $dagilim["{$k}_toplam"];
+        $bazBlok = (float) ($dagilim['bolumler'][$kat]["{$k}_toplam"] ?? 0);
         $etkinToplam = ($this->dersSaati && $this->dersSaati > 0)
             ? (float) $this->dersSaati
-            : (float) ($this->icerik['saat'] ?? $dagilim["{$k}_toplam"]);
+            : (float) ($this->icerik['saat'] ?? $bazToplam);
 
-        $aktifBloklar = collect(array_keys($katEslesme))->filter(function (string $b): bool {
-            $maddeler = $b === 'isyerine_ozgu'
-                ? ($this->icerik['isyerine_ozgu']['maddeler'] ?? [])
-                : ($this->icerik[$b] ?? []);
-
-            return collect($maddeler)->contains(fn ($m) => (bool) ($m['dahil'] ?? true));
-        })->count();
-
-        if ($aktifBloklar <= 0) {
+        if ($bazToplam <= 0 || $bazBlok <= 0) {
             return 0;
         }
 
-        return (int) round(($etkinToplam / $aktifBloklar) * 45);
+        return (int) round(($bazBlok / $bazToplam) * $etkinToplam * 45);
     }
 
     /** Tek bir bloğun dahil konularına hedef fiili dakikayı kayıpsız dağıtır. */
@@ -932,8 +933,8 @@ class EgitimKatilim extends Page
                 'sektor' => ($this->sektorAnahtari && $this->sektorAnahtari !== 'ozel') ? $this->sektorAnahtari : ($this->naceSektoru ?: 'insaat'),
                 'is_kolu' => $this->isKolu ?: null,
                 'adet' => 5,
-                'ekleme_sekli' => 'ekle',
-                'kutuphaneye_kaydet' => true,
+                'ekleme_sekli' => 'degistir',
+                'kutuphaneye_kaydet' => false,
             ])
             ->schema([
                 Select::make('sektor')
@@ -1697,23 +1698,26 @@ Formda yazdığınız gibi görünür; Çalışanlar sayfasından düzeltebilirs
                 }),
 
             // Seçili firma adlı BOŞ form (katılımcısız, elle doldurulacak): kayıt oluşturmaz, yıllık planı etkilemez.
+            // Ekrandaki güncel konular ve güncel dakikalar BİREBİR basılır — silinen konular geri eklenmez.
             Action::make('bosFormFirma')
                 ->label('Boş Form (PDF)')
                 ->icon('heroicon-o-document')
                 ->color('gray')
                 ->visible(fn () => $this->firma !== null)
-                ->tooltip('Ekrandaki konularla (firmanın güncel 4. bölüm konuları dahil) boş, katılımcısız formu indirir; ad/T.C./imza elle doldurulur. Kayıt oluşturmaz.')
-                ->action(fn () => EgitimKatilimUretici::bosFormPdf(
-                    $this->baslikAnahtari,
-                    $this->baslikAnahtari === 'genel' ? $this->sektorAnahtari : null,
-                    $this->firma->tehlike_sinifi ?: 'az_tehlikeli',
-                    $this->egitimTuru,
-                    $this->firma,
-                    // Ekrandaki (düzenlenmiş) konu içeriği + firmanın konuları eklenir; iş kolu (grup) formunda yalnız ekrandakiler.
-                    $this->isKolu !== ''
-                        ? $this->icerik
-                        : EgitimFirmaIcerigi::firmaKonulariniEkle($this->icerik, $this->firma, $this->baslikAnahtari, $this->baslikAnahtari === 'genel' ? $this->sektorAnahtari : null, $this->egitimTuru),
-                )),
+                ->tooltip('Ekrandaki güncel konular ve dakikalarla boş, katılımcısız imza formunu indirir (silinen konular geri gelmez). Kayıt oluşturmaz.')
+                ->action(function () {
+                    $icerik = EgitimIcerikOlusturucu::bosKonulariAyikla($this->icerik);
+                    $icerik['saat'] = $this->dersSaati ?: ($icerik['saat'] ?? null);
+
+                    return EgitimKatilimUretici::bosFormPdf(
+                        $this->baslikAnahtari,
+                        $this->baslikAnahtari === 'genel' ? $this->sektorAnahtari : null,
+                        $this->firma->tehlike_sinifi ?: 'az_tehlikeli',
+                        $this->egitimTuru,
+                        $this->firma,
+                        $icerik,
+                    );
+                }),
             // Çıktı eylemleri başlıkta GİZLİ kalır (display:none); sayfadaki "Çıktı Al" menüsü (egitim-katilim.blade.php) bunları
             // mountAction ile açar. Filament'in açılır menüsü bazı ekranlarda sol üst köşede açıldığı için menü sayfaya sabitlendi.
             Action::make('pdf')

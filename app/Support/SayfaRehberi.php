@@ -283,10 +283,10 @@ class SayfaRehberi
                 'baslik' => 'Eğitim & Sınav Merkezi — Detaylı Kullanım ve Yönlendirme Rehberi',
                 'ozet' => 'Temel İSG eğitimlerini (Tamamı Yüz Yüze, Uzaktan/Online veya Karma Tamamlama), ekip bazlı formları (Kalıp / Sıva), 10 soruluk sınav kâğıtlarını ve sertifikaları Yıllık Eğitim Planı ile birebir senkron biçimde yönetin.',
                 'adimlar' => [
-                    '1. Hazırlık (İşe Özgü Konular & Plan): Önce İşe Özgü Eğitim Konuları ekranından tüm sektörler için AI/API ile 4. bölüm konularını kütüphaneye doldurun ve Yıllık Eğitim Planı ile senkronize edin.',
+                    '1. İLK ADIM — Yıllık Eğitim Planı (Ana Kaynak): Önce Yıllık Eğitim Planı ekranından "✨ AI ile Tüm Firmaları Planla" (veya tek firma için "✨ AI ile Bu Firmanın 4. Bölümünü Planla") ile her firmanın 4. bölümünü ve Karma saatlerini oluşturun. Eğitim Katılım, Boş Form ve Sertifikalar doğrudan bu plandan beslenir.',
                     '2. Firma, Şekil ve Ekip Seçimi: Firmayı seçin; "Eğitim Şekli (Katılım Formu Tipi)" kutusundan Tamamı Yüz Yüze, Uzaktan/Online veya Yüz Yüze Tamamlama (Karma) formunu seçin. Şantiyede farklı ekiplere eğitim veriyorsanız "Çalışan Grubu / İş Kolu" etiketini işaretleyin.',
-                    '3. Konular, Otomatik Süre ve Katılımcılar: 4. bölüme "+ Konu Ekle" veya "✨ AI ile İşe Özgü Konu Üret" ile konu ekleyin — dakikalar toplam eğitim süresine göre otomatik bölünür. Katılımcıları Şube/Departman veya Görev (Kalıpçı, Sıvacı vb.) filtresiyle ya da SGK İşe Giriş PDF\'i yükleyerek seçin.',
-                    '4. Çıktı & Otomatik İşleme: Üstteki "Çıktı Al ▾" menüsünden PDF (TR veya TR/EN), Excel, Word, 10 Soruluk Sınav Kâğıdı veya Sertifika indirin. Kaydedilen eğitim Yıllık Eğitim Planı 4. bölümüne ve yenileme takibine otomatik işlenir.',
+                    '3. Konular, Otomatik Süre ve Katılımcılar: 4. bölüm firmanın Yıllık Eğitim Planından birebir gelir; isterseniz "+ Konu Ekle" / "✕" ile düzenleyin — dakikalar toplam eğitim süresine göre kayıpsız otomatik bölünür ve Boş Form (PDF) ekrandaki güncel haliyle çıkar.',
+                    '4. Çıktı & Otomatik İşleme: Üstteki "Çıktı Al ▾" menüsünden PDF (TR veya TR/EN), Excel, Word, 10 Soruluk Sınav Kâğıdı veya Sertifika indirin. Kaydedilen eğitim Yıllık Eğitim Planına ve yenileme takibine otomatik işlenir.',
                 ],
                 'bolumler' => [
                     [
@@ -320,10 +320,10 @@ class SayfaRehberi
                         'baslik' => 'Önerilen Uçtan Uca İş Akışı (Hangi Ekrandan Başlamalı?)',
                         'etiket' => 'İş Akışı',
                         'maddeler' => [
-                            'Adım 1 — İşe Özgü Eğitim Konuları: "✨ API / AI ile Sektör Konuları Üret" ile 21 sektörün kütüphanesini doldurun.',
-                            'Adım 2 — Yıllık Eğitim Planı: Karma planı uygulayın, NACE uyuşmayan firmada Gerçek İş Grubu seçip "Aynı İş Grubundaki Firmalara Eşitle" yapın.',
-                            'Adım 3 — Online Eğitim Atama & Takip: Çalışanlara LMS 8s/4s online eğitimi atayın; bitirenler planda otomatik G (Gerçekleşti) işlenir.',
-                            'Adım 4 — Eğitim Katılım (Karma): Kalan 4s/8s yüz yüze oturumun imza tutanağını, 10 soruluk sınav kâğıdını ve sertifikalarını tek tıkla alın.',
+                            'Adım 1 — Yıllık Eğitim Planı (Ana Kaynak): "✨ AI ile Tüm Firmaları Planla" ile tüm aktif firmalarınızın 4. bölümünü sektör/Gerçek İş Grubuna göre tek seferde kurun (aynı iş grubundaki firmalar aynı 4. bölümü alır, G ayları korunur).',
+                            'Adım 2 — Online Eğitim Atama & Takip: Çalışanlara LMS 8s/4s online eğitimi atayın; bitirenler Yıllık Eğitim Planında otomatik G (Gerçekleşti) işlenir.',
+                            'Adım 3 — Eğitim Katılım Formu (3 Mod) & Boş Form: Plandan birebir gelen konular ve hatasız sürelerle Tamamı Yüz Yüze, Online veya Karma tamamlama tutanağını, 10 soruluk sınav kâğıdını ve sertifikalarını alın.',
+                            'Adım 4 — Konu Kütüphanesi (İsteğe Bağlı): Ortak şablonları yönetmek veya bir konuyu tüm firmaların planlarından tek seferde temizlemek için İşe Özgü Eğitim Konuları ekranını kullanın.',
                         ],
                     ],
                 ],

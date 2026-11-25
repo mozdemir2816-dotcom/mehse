@@ -268,18 +268,69 @@ class IseOzguEgitimKonulari extends Page
             });
     }
 
-    /** Kendi konusunu siler; sistem konusunu kütüphaneden gizler. */
+    /** Kendi konusunu siler (ve tamamlanmamış mevcut yıl yıllık planlarından da temizler); sistem konusunu gizler. */
     public function kaldir(string $anahtar): void
     {
         $userId = Filament::auth()->id();
+        $silinenAd = null;
 
         if (str_starts_with($anahtar, 'ozel_')) {
-            IseOzguEgitimKonusu::query()->where('user_id', $userId)->whereKey((int) substr($anahtar, 5))->delete();
+            $kayit = IseOzguEgitimKonusu::query()->where('user_id', $userId)->whereKey((int) substr($anahtar, 5))->first();
+            $silinenAd = $kayit?->ad;
+            $kayit?->delete();
         } elseif ($s = IseOzguEgitimKutuphanesi::sistemKonulari()->get($anahtar)) {
+            $silinenAd = $s['ad'];
             IseOzguEgitimKonusu::query()->updateOrCreate(['user_id' => $userId, 'sistem_anahtari' => $anahtar], ['ad' => $s['ad'], 'gizli' => true]);
         }
 
+        // Kütüphaneden silinen/gizlenen konu, bu yılki Yıllık Eğitim Planlarında G (tamamlandı) değilse
+        // oradan da temizlenir ve bölüm saatleri yeniden dağıtılır (hayalet konu kalmasın).
+        $temizlenenPlan = 0;
+        if ($silinenAd !== null && $userId) {
+            $normSilinen = \App\Support\EgitimKonulari::normalize($silinenAd);
+            $planlar = \App\Models\YillikPlan::query()
+                ->with('firma')
+                ->where('yil', (int) now()->year)
+                ->whereHas('firma', fn ($q) => $q->where('user_id', $userId))
+                ->get();
+
+            foreach ($planlar as $plan) {
+                $egitimler = $plan->egitimler ?? [];
+                $yeni = [];
+                $degisti = false;
+
+                foreach ($egitimler as $satir) {
+                    $eslesti = ($satir['kategori'] ?? null) === 'ise_ozgu'
+                        && (($satir['kutuphane_anahtari'] ?? null) === $anahtar
+                            || \App\Support\EgitimKonulari::normalize((string) ($satir['konu'] ?? '')) === $normSilinen);
+                    $tamamlanmisMi = in_array('tamamlandi', (array) ($satir['aylar'] ?? []), true);
+
+                    if ($eslesti && ! $tamamlanmisMi) {
+                        $degisti = true;
+
+                        continue;
+                    }
+                    $yeni[] = $satir;
+                }
+
+                if ($degisti) {
+                    $mod = \App\Support\YillikEgitimPlanlayici::moduTespitEt($yeni, $plan->firma);
+                    $yeni = \App\Support\YillikEgitimPlanlayici::satirlaraUygula($yeni, $plan->firma, $mod);
+                    $plan->update(['egitimler' => $yeni]);
+                    $temizlenenPlan++;
+                }
+            }
+        }
+
         $this->updated();
+
+        if ($temizlenenPlan > 0) {
+            Notification::make()
+                ->title('Konu kütüphaneden ve '.$temizlenenPlan.' Yıllık Eğitim Planından kaldırıldı')
+                ->body('Etkilenen planların 4. bölüm saatleri toplam eğitim süresine göre otomatik güncellendi.')
+                ->success()
+                ->send();
+        }
     }
 
     /** Gizlenen ya da düzenlenen sistem konusunu orijinal haline döndürür. */
