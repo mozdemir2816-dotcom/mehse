@@ -196,6 +196,7 @@ class YillikPlanExcelUretici
                 $hedefMetin = filled($hedefMetin) ? $ekipEtiket.' '.$hedefMetin : $ekipEtiket;
             }
             $s->setCellValue("C{$r}", $hedefMetin);
+            $s->getStyle("C{$r}")->getAlignment()->setWrapText(true);
             $egiticiMetin = self::buyuk((string) ($m['egitici'] ?? ''));
             $yontemEtiket = YillikEgitimPlanlayici::excelYontemEtiketi($m['yontem'] ?? null);
             if ($yontemEtiket !== '') {
@@ -209,12 +210,16 @@ class YillikPlanExcelUretici
                 ->setHorizontal(Alignment::HORIZONTAL_CENTER)
                 ->setVertical(Alignment::VERTICAL_CENTER);
 
-            // Eğitici + yöntem metni uzun olursa satır yüksekliği taşmayı önleyecek kadar genişletilir.
-            $tahminiSatir = 0;
+            // Hedef (C) veya Eğitici + yöntem (D) metni uzun olursa satır yüksekliği taşmayı önleyecek kadar genişletilir.
+            $dSatir = 0;
             foreach (explode("\n", $egiticiMetin) as $parca) {
-                $tahminiSatir += max(1, (int) ceil(mb_strlen(trim($parca), 'UTF-8') / 24));
+                $dSatir += max(1, (int) ceil(mb_strlen(trim($parca), 'UTF-8') / 24));
             }
-            $gerekenYukseklik = $tahminiSatir * 13 + 8;
+            $cSatir = 0;
+            foreach (explode("\n", $hedefMetin) as $parca) {
+                $cSatir += max(1, (int) ceil(mb_strlen(trim($parca), 'UTF-8') / 54));
+            }
+            $gerekenYukseklik = max($dSatir * 13 + 8, $cSatir * 13.5 + 10);
             $mevcutYukseklik = $s->getRowDimension($r)->getRowHeight();
             if ($mevcutYukseklik > 0 && $gerekenYukseklik > $mevcutYukseklik) {
                 $s->getRowDimension($r)->setRowHeight($gerekenYukseklik);
