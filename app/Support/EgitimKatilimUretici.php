@@ -78,12 +78,19 @@ class EgitimKatilimUretici
             ? EgitimFirmaIcerigi::bosForm($firma, $baslikAnahtari, $sektorAnahtari, $egitimTuru)
             : EgitimIcerikOlusturucu::olustur($baslikAnahtari, $sektorAnahtari, $tehlikeSinifi, $egitimTuru);
 
+        $firma?->loadMissing(['igu', 'isyeriHekimi']);
+
         $kayit = new EgitimKatilim([
             'baslik_anahtari' => $baslikAnahtari,
             'egitim_turu' => $egitimTuru,
+            'egitim_sekli' => $icerik['form_modu'] ?? 'yuz_yuze',
             'sure_gun' => EgitimIcerikOlusturucu::planlananGun($icerik),
             'isg_uzmani_var' => true,
-            'isyeri_hekimi_var' => false,
+            'isg_uzmani_adi' => $firma?->igu?->ad_soyad,
+            'isg_uzmani_kase' => $firma?->igu?->kase_gorseli,
+            'isyeri_hekimi_var' => true,
+            'isyeri_hekimi_adi' => $firma?->isyeriHekimi?->ad_soyad,
+            'isyeri_hekimi_kase' => $firma?->isyeriHekimi?->kase_gorseli,
             'katilimcilar' => [],
         ]);
         $kayit->belge_no = 'BOŞ FORM';

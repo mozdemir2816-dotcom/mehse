@@ -60,7 +60,9 @@
      Katılımcı listesi ikinci sayfaya taşarsa da eğitmen imzası orada da olur. --}}
     @php
         $en = ($dil ?? 'tr') === 'tr_en';
-        $sutunSayisi = 1 + ($kayit->isg_uzmani_var ? 1 : 0) + ($kayit->isyeri_hekimi_var ? 1 : 0);
+        $bosFormMu = ($kayit->belge_no ?? null) === 'BOŞ FORM';
+        $isverenVar = ! $bosFormMu;
+        $sutunSayisi = max(1, ($isverenVar ? 1 : 0) + ($kayit->isg_uzmani_var ? 1 : 0) + ($kayit->isyeri_hekimi_var ? 1 : 0));
         $sutunGenislik = round(100 / $sutunSayisi, 2).'%';
     @endphp
     <div class="alt-serit">
@@ -69,7 +71,7 @@
                 @if ($kayit->isg_uzmani_var)
                     <td style="width:{{ $sutunGenislik }}">
                         <div class="rol">{{ $en ? 'Eğitimi Veren — İGU / OHS Specialist' : 'Eğitimi Veren — İş Güvenliği Uzmanı' }}</div>
-                        <div class="ad">{{ $kayit->isg_uzmani_ad ?: ($firma?->igu?->ad_soyad ?: '') }}@if ($firma?->igu?->sertifika_no) ({{ $firma->igu->sertifika_no }})@endif&nbsp;</div>
+                        <div class="ad">{{ $kayit->isg_uzmani_adi ?: ($kayit->isg_uzmani_ad ?: ($firma?->igu?->ad_soyad ?: '')) }}@if ($firma?->igu?->sertifika_no) ({{ $firma->igu->sertifika_no }})@endif&nbsp;</div>
                         <div class="kase">
                             @if (($imzali ?? true) && $kayit->isg_uzmani_kase && is_file(storage_path('app/public/'.$kayit->isg_uzmani_kase)))
                                 <img src="{{ storage_path('app/public/'.$kayit->isg_uzmani_kase) }}">
@@ -81,7 +83,7 @@
                 @if ($kayit->isyeri_hekimi_var)
                     <td style="width:{{ $sutunGenislik }}">
                         <div class="rol">{{ $en ? 'Eğitimi Veren — İşyeri Hekimi / Physician' : 'Eğitimi Veren — İşyeri Hekimi' }}</div>
-                        <div class="ad">{{ $kayit->isyeri_hekimi_ad ?: ($firma?->isyeriHekimi?->ad_soyad ?: '') }}@if ($firma?->isyeriHekimi?->sertifika_no) ({{ $firma->isyeriHekimi->sertifika_no }})@endif&nbsp;</div>
+                        <div class="ad">{{ $kayit->isyeri_hekimi_adi ?: ($kayit->isyeri_hekimi_ad ?: ($firma?->isyeriHekimi?->ad_soyad ?: '')) }}@if ($firma?->isyeriHekimi?->sertifika_no) ({{ $firma->isyeriHekimi->sertifika_no }})@endif&nbsp;</div>
                         <div class="kase">
                             @if (($imzali ?? true) && $kayit->isyeri_hekimi_kase && is_file(storage_path('app/public/'.$kayit->isyeri_hekimi_kase)))
                                 <img src="{{ storage_path('app/public/'.$kayit->isyeri_hekimi_kase) }}">
@@ -90,12 +92,14 @@
                         <div class="imza-satir">{{ $en ? 'Kaşe / İmza · Stamp / Signature' : 'Kaşe / İmza' }}</div>
                     </td>
                 @endif
-                <td style="width:{{ $sutunGenislik }}">
-                    <div class="rol">{{ $en ? 'İşveren / Vekili · Employer' : 'İşveren / İşveren Vekili' }}</div>
-                    <div class="ad">{{ $firma?->isveren_vekili ?: ($firma?->isveren_ad ?: '') }}&nbsp;</div>
-                    <div class="kase"></div>
-                    <div class="imza-satir">{{ $en ? 'Kaşe / İmza · Stamp / Signature' : 'Kaşe / İmza' }}</div>
-                </td>
+                @if ($isverenVar)
+                    <td style="width:{{ $sutunGenislik }}">
+                        <div class="rol">{{ $en ? 'İşveren / Vekili · Employer' : 'İşveren / İşveren Vekili' }}</div>
+                        <div class="ad">{{ $firma?->isveren_vekili ?: ($firma?->isveren_ad ?: '') }}&nbsp;</div>
+                        <div class="kase"></div>
+                        <div class="imza-satir">{{ $en ? 'Kaşe / İmza · Stamp / Signature' : 'Kaşe / İmza' }}</div>
+                    </td>
+                @endif
             </tr>
         </table>
         <p class="yasal">{{ $en ? '6331 Sayılı İSG Kanunu m.17 uyarınca düzenlenmiştir. / Issued pursuant to OHS Law No. 6331 Art. 17.' : '6331 Sayılı İş Sağlığı ve Güvenliği Kanunu Madde 17 uyarınca düzenlenmiştir.' }}</p>

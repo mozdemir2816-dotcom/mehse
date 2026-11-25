@@ -449,4 +449,58 @@ class EgitimKatilimYillikPlanSenkronTest extends TestCase
         $this->assertCount(3, $sonra);
         $this->assertSame([60, 60, 60], collect($sonra)->pluck('dakika')->all());
     }
+
+    public function test_bos_egitim_katilim_pdfinde_isveren_yerine_isyeri_hekimi_imza_alani_yer_alir(): void
+    {
+        $igu = \App\Models\IsgProfesyoneli::create([
+            'user_id' => $this->uzman->id,
+            'tip' => 'igu',
+            'ad_soyad' => 'Mehmet Uzman',
+            'sertifika_no' => 'IGU-123',
+        ]);
+        $hekim = \App\Models\IsgProfesyoneli::create([
+            'user_id' => $this->uzman->id,
+            'tip' => 'isyeri_hekimi',
+            'ad_soyad' => 'Dr. Ayşe Hekim',
+            'sertifika_no' => 'IH-456',
+        ]);
+        $firma = Firma::factory()->for($this->uzman)->create([
+            'igu_id' => $igu->id,
+            'isyeri_hekimi_id' => $hekim->id,
+            'isveren_ad' => 'Patron Bey',
+        ]);
+
+        $icerik = \App\Support\EgitimIcerikOlusturucu::olustur('genel', 'insaat', 'tehlikeli');
+        $bosKayit = new EgitimKatilim([
+            'baslik_anahtari' => 'genel',
+            'egitim_turu' => 'ilk',
+            'egitim_sekli' => 'yuz_yuze',
+            'sure_gun' => 2,
+            'isg_uzmani_var' => true,
+            'isg_uzmani_adi' => $igu->ad_soyad,
+            'isyeri_hekimi_var' => true,
+            'isyeri_hekimi_adi' => $hekim->ad_soyad,
+            'katilimcilar' => [],
+        ]);
+        $bosKayit->belge_no = 'BOŞ FORM';
+
+        $html = view('pdf.egitim-katilim', [
+            'kayit' => $bosKayit,
+            'firma' => $firma->load(['igu', 'isyeriHekimi']),
+            'icerik' => $icerik,
+            'imzali' => true,
+        ])->render();
+
+        $this->assertStringContainsString('Eğitimi Veren — İş Güvenliği Uzmanı', $html);
+        $this->assertStringContainsString('Mehmet Uzman', $html);
+        $this->assertStringContainsString('Eğitimi Veren — İşyeri Hekimi', $html);
+        $this->assertStringContainsString('Dr. Ayşe Hekim', $html);
+        $this->assertStringNotContainsString('İşveren / İşveren Vekili', $html);
+
+        // bosFormPdf gerçek PDF çıktısını sorunsuz üretmeli
+        $yanit = \App\Support\EgitimKatilimUretici::bosFormPdf('genel', 'insaat', 'tehlikeli', 'ilk', $firma, $icerik);
+        ob_start();
+        $yanit->sendContent();
+        $this->assertStringStartsWith('%PDF', ob_get_clean());
+    }
 }
