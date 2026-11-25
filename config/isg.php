@@ -1026,6 +1026,13 @@ return [
             // (bkz. RiskKutuphanesi::kategoriler()).
             'İnşaat / Şantiye' => [
                 [
+                    'anahtar' => 'insaat_genel_tehlikeler', 'ad' => 'İnşaat Genel Tehlikeleri (Boşluklar, Kat Kenarları, Merdiven & Asansör Şaftları)',
+                    'v' => ['baret' => '✔', 'ayakkabi' => '✔ S3', 'eldiven' => '✔'],
+                    'talimat_basliklari' => ['Yükseklerde Çalışma Talimatı', 'Şantiye Trafiği ve Araç-Yaya Ayrımı Talimatı', 'Genel İşyeri İSG Kuralları Talimatı'],
+                    'tehlike_kategorileri' => ['ŞANTİYE GENEL ÇALIŞMALAR', 'Şantiye Genel Çalışmalar & Tesisler', 'Kaba Yapı - Kalıp & İskele'],
+                    'egitim_konusu' => 'Şantiyede boşlukların tehlikeli olduğu ve korunma kuralları: merdiven boşlukları, asansör şaftları, tesisat/havalandırma/döşeme boşlukları, açık kat kenarları ve balkon/teras açıklıkları; geçici kenar koruma korkulukları, sağlam kapak/ızgara ile kapatma, güvenlik ağları, koruyucuları sökmeme ve korkuluksuz kenarlara yaklaşmama, düşen malzeme, geçici elektrik kabloları ve saha araç-yaya ayrımı.',
+                ],
+                [
                     'anahtar' => 'genel_saha', 'ad' => 'Genel Şantiye Saha Gezisi',
                     'v' => ['baret' => '✔', 'ayakkabi' => '✔'],
                     'talimat_basliklari' => ['Şantiye Trafiği ve Araç-Yaya Ayrımı Talimatı', 'Genel İşyeri İSG Kuralları Talimatı', 'Kişisel Koruyucu Donanım (KKD) Genel Kullanım Talimatı'],
@@ -4742,6 +4749,7 @@ return [
         // sektör için kullanıcı elle madde ekler (arayüz bunu zaten destekliyor).
         'isyerine_ozgu_sektorler' => [
             'insaat' => ['ad' => 'İnşaat', 'maddeler' => [
+                'İnşaat Genel Tehlikeleri: Boşlukların tehlikeli olduğu (merdiven, asansör şaftı, tesisat/döşeme boşlukları, kat kenarları), korkuluk ve toplu koruma kuralları',
                 'İskele ve kalıp güvenliği', 'Yüksekte çalışma önlemleri', 'Kazı işlerinde güvenlik',
                 'Ağır iş makinesi kullanımı', 'Düşen nesne tehlikesi',
             ]],
@@ -4799,6 +4807,16 @@ return [
                 'Düşme faktörü kavramı ve önlemler',
                 'Düşmeden korunmanın teorisi ve uygulaması',
                 'İş planı ve alanın organizasyonu',
+            ]],
+            'insaat_genel_tehlikeler' => ['ad' => 'İnşaat Genel Tehlikeleri (Boşluklar, Kat Kenarları, Merdiven & Asansör Şaftları)', 'maddeler' => [
+                'Şantiyede boşlukların hayati tehlikesi: merdiven boşlukları, asansör şaftları, tesisat/havalandırma ve döşeme açıklıkları',
+                'Açık kat kenarları, balkon ve teras kenarlarında düşme tehlikesi ve güvenli çalışma mesafesi',
+                'Toplu koruma sistemleri: geçici kenar koruma korkulukları (üst, ara korkuluk ve eteklik), güvenlik ağları ve sabit kapaklar',
+                'Döşeme ve şaft boşluklarının taşıyıcı kapak/ızgara ile kapatılması, sabitlenmesi ve uyarı levhaları ile işaretlenmesi',
+                'Korkuluk, bariyer ve boşluk kapaklarının izinsiz sökülmemesi; sökülmesi zorunlu hâllerde geri takma ve emniyet kemeri kuralı',
+                'Karanlık veya yetersiz aydınlatılmış katlarda, merdiven sahanlıklarında ve şaft önlerinde hareket kuralları',
+                'Yüksekten malzeme düşmesi tehlikesi, kat kenarlarında malzeme istif yasağı ve alt kotlarda güvenli geçiş koridorları',
+                'Şantiye içi araç-yaya ayrımı, geri manevra tehlikeleri, geçici elektrik panoları/seyyar kablolar ve zorunlu KKD (baret, S3 ayakkabı, yelek)',
             ]],
             'kapali_alan' => ['ad' => 'Kapalı Alanlarda Çalışma Eğitimi', 'maddeler' => [
                 'Kapalı/sınırlı alan tanımı, türleri ve sınıflandırması (I, II, III sınıf)',

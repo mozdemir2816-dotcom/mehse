@@ -118,6 +118,9 @@ abstract class YillikPlanlar extends Page
     /** İş kalemi seçicide diğer sektör gruplarını da göster/gizle. */
     public bool $tumIsKalemleriniGoster = false;
 
+    /** Şantiye firması ilk açıldığında 'insaat_genel_tehlikeler' otomatik ön-seçildiyse true. */
+    public bool $santiyeGenelOtomatikSecildi = false;
+
     public ?string $yeniDegerlendirmeCalisma = null;
 
     public function mount(): void
@@ -161,7 +164,13 @@ abstract class YillikPlanlar extends Page
         if ($this->sekme === 'egitim' && ($p = $this->plan())) {
             $this->egitimPlanModu = YillikEgitimPlanlayici::moduTespitEt($p->egitimler ?? [], $this->firma);
             $this->firmaEgitimGrubu = IseOzguSenkron::firmaGrubuOku($this->firma) ?? '';
-            $this->seciliIsKalemleri = array_values(array_filter((array) ($this->firma?->is_kalemleri ?? [])));
+            $secili = array_values(array_filter((array) ($this->firma?->is_kalemleri ?? [])));
+            $this->santiyeGenelOtomatikSecildi = false;
+            if ($secili === [] && IsKalemiKutuphanesi::santiyeFirmasiMi($this->firma)) {
+                $secili = [IsKalemiKutuphanesi::SANTIYE_GENEL_ANAHTAR];
+                $this->santiyeGenelOtomatikSecildi = true;
+            }
+            $this->seciliIsKalemleri = $secili;
         }
     }
 
@@ -194,8 +203,18 @@ abstract class YillikPlanlar extends Page
     /** İşyerinde yapılan bir iş kalemini seç / kaldır. */
     public function isKalemiToggle(string $anahtar): void
     {
-        if (! IsKalemiKutuphanesi::tumu()->has($anahtar)) {
+        $tumu = IsKalemiKutuphanesi::tumu();
+        if (! $tumu->has($anahtar)) {
             return;
+        }
+
+        if ($anahtar === IsKalemiKutuphanesi::SANTIYE_GENEL_ANAHTAR) {
+            $this->santiyeGenelOtomatikSecildi = false;
+        } elseif ($this->santiyeGenelOtomatikSecildi && ($tumu->get($anahtar)['grup'] ?? null) !== 'İnşaat / Şantiye') {
+            // NACE'si inşaat ama gerçek işi fabrika/hizmet olan firmada başka sektör kalemi seçilince
+            // otomatik ön-seçili gelen şantiye genel başlığını temizle.
+            $this->seciliIsKalemleri = array_values(array_diff($this->seciliIsKalemleri, [IsKalemiKutuphanesi::SANTIYE_GENEL_ANAHTAR]));
+            $this->santiyeGenelOtomatikSecildi = false;
         }
 
         $this->seciliIsKalemleri = in_array($anahtar, $this->seciliIsKalemleri, true)
@@ -220,6 +239,7 @@ abstract class YillikPlanlar extends Page
             $this->seciliIsKalemleri,
             fn ($a) => is_string($a) && $tumu->has($a),
         )));
+        $gecerli = IsKalemiKutuphanesi::santiyeBasliginiEkle($gecerli);
         $this->seciliIsKalemleri = $gecerli;
 
         $this->firma->update(['is_kalemleri' => $gecerli ?: null]);

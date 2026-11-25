@@ -513,12 +513,13 @@ class EgitimKatilim extends Page
     private function isKalemiKonulariniOner(): void
     {
         // Grup (iş kolu) formu (ör. Kalıp Ekibi vs Sıva Ekibi): 4. bölüm YALNIZ seçilen iş kalemlerinin
-        // konularıyla kurulur — ilgisiz kazı/iş makinesi/genel şablon konuları ekibe karışmaz.
+        // konularıyla kurulur (şantiye iş kalemi seçiliyse "İnşaat Genel Tehlikeleri — Boşluklar, Kat Kenarları..."
+        // otomatik en başa eklenir) — ilgisiz diğer ekiplerin konuları karışmaz.
         if ($this->isKoluKalemleri) {
-            $konular = collect(config('isg.kkd_matris.is_kalemleri', []))
-                ->flatten(1)
-                ->whereIn('anahtar', $this->isKoluKalemleri)
-                ->pluck('egitim_konusu')
+            $etkinKalemler = IsKalemiKutuphanesi::santiyeBasliginiEkle($this->isKoluKalemleri);
+            $tumu = IsKalemiKutuphanesi::tumu();
+            $konular = collect($etkinKalemler)
+                ->map(fn (string $a) => $tumu->get($a)['egitim_konusu'] ?? null)
                 ->filter()
                 ->unique()
                 ->values();
@@ -526,11 +527,14 @@ class EgitimKatilim extends Page
             if ($konular->isNotEmpty()) {
                 $sinif = $this->firma?->tehlike_sinifi ?: 'az_tehlikeli';
                 $hedefDk = in_array($sinif, ['tehlikeli', 'cok_tehlikeli'], true) ? 180 : 90;
-                $dk = max(1, (int) round($hedefDk / $konular->count()));
+                $maddeler = EgitimIcerikOlusturucu::bolumDakikalariniDagit(
+                    $konular->map(fn (string $konu) => ['madde' => $konu, 'dakika' => 15, 'dahil' => true])->all(),
+                    $hedefDk,
+                );
 
                 $this->icerik['isyerine_ozgu'] = [
                     'sektor' => $this->isKolu !== '' ? $this->isKolu : ($this->icerik['isyerine_ozgu']['sektor'] ?? 'İş Kolu / Ekip'),
-                    'maddeler' => $konular->map(fn (string $konu) => ['madde' => $konu, 'dakika' => $dk, 'dahil' => true])->all(),
+                    'maddeler' => $maddeler,
                 ];
             }
 

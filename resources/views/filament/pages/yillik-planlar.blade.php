@@ -328,11 +328,14 @@
                                     </div>
                                     <div style="display:flex;flex-wrap:wrap;gap:.3rem">
                                         @foreach ($kalemler as $kAnahtar => $kVeri)
-                                            @php $aktif = in_array($kAnahtar, $seciliIsKalemleri, true); @endphp
+                                            @php
+                                                $aktif = in_array($kAnahtar, $seciliIsKalemleri, true);
+                                                $otomatikSantiye = $kAnahtar === \App\Support\IsKalemiKutuphanesi::SANTIYE_GENEL_ANAHTAR;
+                                            @endphp
                                             <button type="button" wire:click="isKalemiToggle('{{ $kAnahtar }}')"
                                                 title="{{ $kVeri['egitim_konusu'] }}"
                                                 style="padding:.22rem .58rem;border-radius:9999px;cursor:pointer;font-size:.73rem;font-weight:{{ $aktif ? '700' : '500' }};border:1px solid {{ $aktif ? '#047857' : 'rgb(107 114 128 / .35)' }};background:{{ $aktif ? 'rgb(16 185 129 / .14)' : '#fff' }};color:{{ $aktif ? '#065f46' : '#334155' }}">
-                                                {{ $aktif ? '✓ ' : '+ ' }}{{ $kVeri['ad'] }}
+                                                {{ $aktif ? '✓ ' : '+ ' }}{{ $kVeri['ad'] }}@if ($otomatikSantiye) <span style="margin-left:.2rem;font-size:.65rem;padding:.05rem .35rem;border-radius:9999px;background:rgb(217 119 6 / .15);color:#92400e">Otomatik</span>@endif
                                             </button>
                                         @endforeach
                                     </div>

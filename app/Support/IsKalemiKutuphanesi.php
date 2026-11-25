@@ -13,6 +13,9 @@ use Illuminate\Support\Collection;
  */
 class IsKalemiKutuphanesi
 {
+    /** Şantiyelerde (İnşaat / Şantiye grubunda) otomatik en başa eklenecek genel tehlikeler başlığı. */
+    public const SANTIYE_GENEL_ANAHTAR = 'insaat_genel_tehlikeler';
+
     /** Sektör anahtarı → öncelikli gösterilecek iş kalemi grubu. */
     private const SEKTOR_ANA_GRUP = [
         'insaat' => 'İnşaat / Şantiye',
@@ -88,6 +91,48 @@ class IsKalemiKutuphanesi
         return self::SEKTOR_ANA_GRUP[$sektor] ?? 'İnşaat / Şantiye';
     }
 
+    /** Firma bir şantiye / inşaat firması mı? */
+    public static function santiyeFirmasiMi(?Firma $firma): bool
+    {
+        if (! $firma) {
+            return false;
+        }
+
+        $etkin = IseOzguSenkron::etkinGrup($firma);
+
+        return $etkin === 'insaat' || ($etkin === null && YillikPlanSablonu::insaatMi($firma));
+    }
+
+    /** Verilen iş kalemi anahtarları arasında 'İnşaat / Şantiye' grubuna ait en az bir iş kalemi var mı? */
+    public static function santiyeKalemiVarMi(array $anahtarlar): bool
+    {
+        $tumu = static::tumu();
+
+        return collect($anahtarlar)->contains(fn ($a) => ($tumu->get($a)['grup'] ?? null) === 'İnşaat / Şantiye');
+    }
+
+    /**
+     * Şantiye iş kalemi seçiliyse "İnşaat Genel Tehlikeleri (Boşluklar, Kat Kenarları, Merdiven & Asansör Şaftları)"
+     * başlığını otomatik olarak listenin en başına ekler.
+     *
+     * @param  array<int, string>  $anahtarlar
+     * @return array<int, string>
+     */
+    public static function santiyeBasliginiEkle(array $anahtarlar): array
+    {
+        $temiz = array_values(array_unique(array_filter($anahtarlar, 'is_string')));
+
+        if (! static::santiyeKalemiVarMi($temiz)) {
+            return $temiz;
+        }
+
+        if (in_array(self::SANTIYE_GENEL_ANAHTAR, $temiz, true)) {
+            return $temiz;
+        }
+
+        return [self::SANTIYE_GENEL_ANAHTAR, ...$temiz];
+    }
+
     /**
      * Eğitim Katılım Formu "Çalışan Grubu / İş Kolu" butonları için seçenekler:
      *  - Firmada `is_kalemleri` seçiliyse YALNIZ firmanın seçili iş kalemleri döner ($tumunuGoster = false iken).
@@ -132,6 +177,7 @@ class IsKalemiKutuphanesi
      */
     public static function planSatirlari(array $anahtarlar, int $kilitAy = 0, array $mevcutEgitimler = []): array
     {
+        $anahtarlar = static::santiyeBasliginiEkle($anahtarlar);
         $tumu = static::tumu();
 
         // Mevcut 4. bölüm tamamlandı (G) aylarını konu adı veya kütüphane anahtarıyla koru

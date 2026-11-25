@@ -693,4 +693,55 @@ class EgitimKatilimYillikPlanSenkronTest extends TestCase
         $this->assertTrue(IseOzguSenkron::firmaOzelMi($tozBoya), 'NACE dışı sektör iş kalemi seçen firma otomatik yalıtılmalı');
         $this->assertSame(['imalat_boyahane'], $tozBoya->fresh()->is_kalemleri);
     }
+
+    public function test_santiyelerde_insaat_genel_tehlikeler_bosluk_basligi_otomatik_gelir_ve_ozel_baslik_olarak_secilebilir(): void
+    {
+        // 1) Ayrı "Eğitim Başlığı" olarak dropdown'da yer almalı ve boşluk/kat kenarı/merdiven/asansör maddelerini içermeli
+        $basliklar = \App\Support\EgitimIcerikOlusturucu::basliklar();
+        $this->assertArrayHasKey('insaat_genel_tehlikeler', $basliklar);
+        $ozel = \App\Support\EgitimIcerikOlusturucu::olustur('insaat_genel_tehlikeler', null, 'cok_tehlikeli');
+        $metin = collect($ozel['maddeler'])->pluck('madde')->implode(' | ');
+        $this->assertStringContainsString('merdiven boşlukları', mb_strtolower($metin));
+        $this->assertStringContainsString('asansör şaftları', mb_strtolower($metin));
+        $this->assertStringContainsString('kat kenarları', mb_strtolower($metin));
+
+        // 2) Şantiye firmasında Yıllık Eğitim Planı açıldığında 'insaat_genel_tehlikeler' otomatik seçili gelir;
+        //    yalnız 'kalip_isleri' seçilip uygulansa bile 4. bölümün 1. satırına otomatik yerleşir!
+        $santiye = Firma::factory()->for($this->uzman)->create([
+            'unvan' => 'Örnek Şantiye Yapı A.Ş.',
+            'tehlike_sinifi' => 'cok_tehlikeli',
+            'nace_kodu' => '41.00.01',
+        ]);
+
+        Livewire::test(YillikEgitimPlani::class)
+            ->set('firmaId', $santiye->id)
+            ->set('yil', 2027)
+            ->assertSet('seciliIsKalemleri', ['insaat_genel_tehlikeler'])
+            ->call('isKalemiToggle', 'insaat_genel_tehlikeler') // kullanıcı kaldırsa dahi şantiye iş kalemi varsa otomatik eklenir
+            ->call('isKalemiToggle', 'kalip_isleri')
+            ->call('isKalemleriniPlanaUygula')
+            ->assertNotified();
+
+        $santiye->refresh();
+        $this->assertSame(['insaat_genel_tehlikeler', 'kalip_isleri'], $santiye->is_kalemleri);
+
+        $plan = YillikPlan::where('firma_id', $santiye->id)->where('yil', 2027)->firstOrFail();
+        $ozgu = collect($plan->egitimler)->where('kategori', 'ise_ozgu')->values();
+        $this->assertCount(2, $ozgu);
+        $this->assertStringContainsString('İnşaat Genel Tehlikeleri', $ozgu[0]['konu']);
+        $this->assertSame('Kalıp İşleri', $ozgu[1]['konu']);
+        $this->assertEqualsWithDelta(4.0, (float) $ozgu->sum('yuz_yuze_saat'), 0.01);
+
+        // 3) Eğitim Katılım Formunda şantiye ekibi (Kalıp İşleri) seçilince 'Boşluklar / Merdiven / Asansör / Kat Kenarları' otomatik 1. madde olarak gelir ve toplam tam 180 dk olur!
+        $katilim = Livewire::test(EgitimSayfasi::class)
+            ->set('firmaId', $santiye->id)
+            ->set('egitimSekli', 'karma')
+            ->call('isKoluToggle', 'kalip_isleri');
+
+        $maddeler = $katilim->get('icerik')['isyerine_ozgu']['maddeler'];
+        $this->assertCount(2, $maddeler);
+        $this->assertStringContainsString('boşlukların tehlikeli olduğu', mb_strtolower($maddeler[0]['madde']));
+        $this->assertStringContainsString('asansör şaftları', mb_strtolower($maddeler[0]['madde']));
+        $this->assertSame(180, collect($maddeler)->sum('dakika'));
+    }
 }
