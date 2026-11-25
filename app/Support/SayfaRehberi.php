@@ -4,18 +4,21 @@ namespace App\Support;
 
 use App\Filament\Pages;
 use App\Filament\Resources\Calisans\CalisanResource;
+use App\Filament\Resources\EgitimPaketis\EgitimPaketiResource;
 use App\Filament\Resources\Firmas\FirmaResource;
 use App\Filament\Resources\RiskDegerlendirmesis\RiskDegerlendirmesiResource;
+use Filament\Resources\Resource;
 
 /**
- * Her ana modülün sağ üstünde gösterilen "❓ Nasıl Kullanılır?" 3 adımlı görsel
- * rehber kütüphanesi — isgpratik sayfa içi yardım kutusu karşılığı.
+ * Her ana modülün sağ üstünde gösterilen "❓ Nasıl Kullanılır?" rehber kütüphanesi.
+ * Temel 3 adımlı özetin yanında Eğitim & Sınav gibi çok ekranlı merkezlerde detaylı
+ * iş akışı kartları, yasal süre tablosu ve doğrudan ekran yönlendirme bağlantıları sunar.
  */
 class SayfaRehberi
 {
     /**
      * @param  array<int, string>  $scopes
-     * @return array{baslik: string, ozet: string, adimlar: array<int, string>, ipucu: string}|null
+     * @return array<string, mixed>|null
      */
     public static function bul(array $scopes): ?array
     {
@@ -28,6 +31,126 @@ class SayfaRehberi
         }
 
         return null;
+    }
+
+    /**
+     * Rehberdeki yönlendirme tanımlarını kullanıcının erişim yetkisine göre filtreler ve
+     * aktif firma bağlamını (?firma=) koruyan canlı URL'lere dönüştürür.
+     *
+     * @param  array<string, mixed>  $rehber
+     * @return array<int, array{etiket: string, aciklama: string, ikon: string, url: string, aktif: bool}>
+     */
+    public static function yonlendirmeler(array $rehber, array $scopes = []): array
+    {
+        $ham = $rehber['yonlendirmeler'] ?? [];
+        if (! is_array($ham) || $ham === []) {
+            return [];
+        }
+
+        $firmaId = request()->integer('firma') ?: null;
+        $param = $firmaId ? ['firma' => $firmaId] : [];
+        $sonuc = [];
+
+        foreach ($ham as $item) {
+            $sinif = $item['sinif'] ?? null;
+            if (! is_string($sinif) || ! class_exists($sinif)) {
+                continue;
+            }
+            if (method_exists($sinif, 'canAccess') && ! $sinif::canAccess()) {
+                continue;
+            }
+
+            $url = is_subclass_of($sinif, Resource::class)
+                ? $sinif::getUrl('index', $param)
+                : $sinif::getUrl($param);
+
+            $sonuc[] = [
+                'etiket' => (string) ($item['etiket'] ?? class_basename($sinif)),
+                'aciklama' => (string) ($item['aciklama'] ?? ''),
+                'ikon' => (string) ($item['ikon'] ?? '→'),
+                'url' => $url,
+                'aktif' => in_array($sinif, $scopes, true),
+            ];
+        }
+
+        return $sonuc;
+    }
+
+    /** Eğitim & Sınav sayfalarında ortak gösterilen RG 02.04.2026 + kullanıcı kuralı süre özet tablosu. */
+    private static function egitimSureTablosu(): array
+    {
+        return [
+            ['sinif' => 'Az Tehlikeli', 'ilk' => '8 saat', 'online' => '8 saat', 'yuz_yuze' => '0 saat', 'tekrar' => '8 saat (4s Online + 4s YY)', 'periyot' => '3 yılda 1'],
+            ['sinif' => 'Tehlikeli', 'ilk' => '12 saat', 'online' => '8 saat (2+2+4)', 'yuz_yuze' => '4 saat (4. Bölüm)', 'tekrar' => '8 saat (4s Online + 4s YY)', 'periyot' => '2 yılda 1'],
+            ['sinif' => 'Çok Tehlikeli', 'ilk' => '16 saat', 'online' => '8 saat (2+2+4)', 'yuz_yuze' => '8 saat (S4+T+4. Bölüm)', 'tekrar' => '8 saat (4s Online + 4s YY)', 'periyot' => 'Yılda 1'],
+        ];
+    }
+
+    /** Eğitim & Sınav merkezinin ortak hızlı yönlendirme haritası. */
+    private static function egitimYonlendirmeleri(): array
+    {
+        return [
+            [
+                'sinif' => Pages\IseOzguEgitimKonulari::class,
+                'ikon' => '✨',
+                'etiket' => 'İşe Özgü Eğitim Konuları (API / AI)',
+                'aciklama' => 'Tüm 21 sektör için 4. Bölüm konularını Gemini API ile tek tıkla kütüphaneye doldurun.',
+            ],
+            [
+                'sinif' => Pages\YillikPlan\YillikEgitimPlani::class,
+                'ikon' => '📅',
+                'etiket' => 'Yıllık Eğitim Planı',
+                'aciklama' => 'Online/Yüz Yüze karma planlayın, NACE dışı Gerçek İş Grubu seçin ve aynı gruptaki firmalara eşitleyin.',
+            ],
+            [
+                'sinif' => Pages\EgitimKatilim::class,
+                'ikon' => '📝',
+                'etiket' => 'Eğitim Katılım Formu (3 Ayrı Mod)',
+                'aciklama' => 'Tamamı Yüz Yüze, Uzaktan/Online veya Yüz Yüze Tamamlama (Karma) tutanağı, sınav ve sertifika üretin.',
+            ],
+            [
+                'sinif' => Pages\UzaktanEgitimAtama::class,
+                'ikon' => '💻',
+                'etiket' => 'Online Eğitim Atama (LMS)',
+                'aciklama' => 'Çalışanlara 8 saat (İlk Defa) veya 4 saat (Yenileme) online eğitim + sınav bağlantısı gönderin.',
+            ],
+            [
+                'sinif' => Pages\UzaktanEgitimTakip::class,
+                'ikon' => '📊',
+                'etiket' => 'Online Eğitim Takip',
+                'aciklama' => 'Bitirenleri ve sınav puanlarını izleyin; tamamlananlar Yıllık Eğitim Planında otomatik G işlenir.',
+            ],
+            [
+                'sinif' => Pages\EgitimYenilemeTakibi::class,
+                'ikon' => '🔄',
+                'etiket' => 'Eğitim Takibi (Yenileme)',
+                'aciklama' => 'Vadesi yaklaşan veya süresi geçen çalışanları görün, tek tıkla yenileme planlayın.',
+            ],
+            [
+                'sinif' => Pages\IsbasiEgitim::class,
+                'ikon' => '🦺',
+                'etiket' => 'İşbaşı Eğitimi (En Az 2 Saat)',
+                'aciklama' => 'İşe yeni başlayan veya görevi değişen çalışan için canlı imzalı oryantasyon tutanağı oluşturun.',
+            ],
+            [
+                'sinif' => Pages\SertifikaOlustur::class,
+                'ikon' => '🎓',
+                'etiket' => 'Sertifika Oluştur (7 Çerçeve / Arkalı-Önlü)',
+                'aciklama' => 'Katılımcılara özel tek sayfa, arkalı-önlü veya Yıldız Grup sertifikası (PDF/ZIP) basın.',
+            ],
+            [
+                'sinif' => Pages\EgitimSorulari::class,
+                'ikon' => '🤖',
+                'etiket' => 'AI ile Soru / Sınav Hazırla',
+                'aciklama' => 'Sektöre ve firmaya özel çoktan seçmeli ön/son test soruları üretip Soru Bankasına ekleyin.',
+            ],
+            [
+                'sinif' => Pages\ToolboxKonusmalari::class,
+                'ikon' => '🗣️',
+                'etiket' => 'Toolbox Konuşmaları',
+                'aciklama' => 'Sahada 5 dakikalık iş öncesi kısa güvenlik bilgilendirmesi ve yoklama tutanağı alın.',
+            ],
+        ];
     }
 
     /**
@@ -157,24 +280,252 @@ class SayfaRehberi
                 'ipucu' => '5510 m.13 gereği iş kazaları kazadan sonraki 3 iş günü içinde SGK\'ya bildirilmek zorundadır.',
             ],
             Pages\EgitimKatilim::class => [
-                'baslik' => 'İSG Eğitim Katılım, Sınav & Sertifika',
-                'ozet' => 'Temel İSG eğitim yoklaması, 10 soruluk ölçme sınavı ve katılım belgesini tek akışta üretin.',
+                'baslik' => 'Eğitim & Sınav Merkezi — Detaylı Kullanım ve Yönlendirme Rehberi',
+                'ozet' => 'Temel İSG eğitimlerini (Tamamı Yüz Yüze, Uzaktan/Online veya Karma Tamamlama), ekip bazlı formları (Kalıp / Sıva), 10 soruluk sınav kâğıtlarını ve sertifikaları Yıllık Eğitim Planı ile birebir senkron biçimde yönetin.',
                 'adimlar' => [
-                    'Firmayı, eğitim tarihini, süresini ve katılımcıları seçin (SGK PDF\'inden de çalışan ekleyebilirsiniz).',
-                    'Eğitim Katılım Formu PDF\'ini ve katılımcıya özel "📝 10 Soruluk Sınav Kâğıdı & Cevap Anahtarı PDF" çıktısını alın.',
-                    'Tamamlanan eğitimler çalışan özlük karnesine ve yenileme takibine otomatik işlenir.',
+                    '1. Hazırlık (İşe Özgü Konular & Plan): Önce İşe Özgü Eğitim Konuları ekranından tüm sektörler için AI/API ile 4. bölüm konularını kütüphaneye doldurun ve Yıllık Eğitim Planı ile senkronize edin.',
+                    '2. Firma, Şekil ve Ekip Seçimi: Firmayı seçin; "Eğitim Şekli (Katılım Formu Tipi)" kutusundan Tamamı Yüz Yüze, Uzaktan/Online veya Yüz Yüze Tamamlama (Karma) formunu seçin. Şantiyede farklı ekiplere eğitim veriyorsanız "Çalışan Grubu / İş Kolu" etiketini işaretleyin.',
+                    '3. Konular, Otomatik Süre ve Katılımcılar: 4. bölüme "+ Konu Ekle" veya "✨ AI ile İşe Özgü Konu Üret" ile konu ekleyin — dakikalar toplam eğitim süresine göre otomatik bölünür. Katılımcıları Şube/Departman veya Görev (Kalıpçı, Sıvacı vb.) filtresiyle ya da SGK İşe Giriş PDF\'i yükleyerek seçin.',
+                    '4. Çıktı & Otomatik İşleme: Üstteki "Çıktı Al ▾" menüsünden PDF (TR veya TR/EN), Excel, Word, 10 Soruluk Sınav Kâğıdı veya Sertifika indirin. Kaydedilen eğitim Yıllık Eğitim Planı 4. bölümüne ve yenileme takibine otomatik işlenir.',
                 ],
-                'ipucu' => 'Eğitim yenileme süreleri Çok Tehlikeli 1 yıl (16 saat), Tehlikeli 2 yıl (12 saat), Az Tehlikeli 3 yıldır (8 saat).',
+                'bolumler' => [
+                    [
+                        'baslik' => '3 Ayrı Eğitim Katılım Formu Nasıl Kullanılır?',
+                        'etiket' => 'Form Tipleri',
+                        'maddeler' => [
+                            'Tamamı Yüz Yüze: Tüm 4 bölüm dahil, tam süre (Az Tehlikeli 8s · Tehlikeli 12s · Çok Tehlikeli 16s; Tekrar 8s). 12 saat ve üstünde otomatik 2 gün + çift imza sütunu açılır.',
+                            'Uzaktan / Online Verilen Eğitim Formu (LMS): Yalnız online verilen konular ve saatler (İlk Defa 8s / Tekrar 4s) listelenir; Tehlikeli ve Çok Tehlikeli sınıfta 4. bölüm hariç tutulur ve PDF "UZAKTAN (ONLİNE) EĞİTİM KATILIM FORMU" başlığıyla çıkar.',
+                            'Yüz Yüze Tamamlama Formu (Karma): Online sonrası sahada yüz yüze verilecek kalan konuları kapsar (Tehlikeli İlk & Tekrar 4s = yalnız 4. bölüm 180 dk; Çok Tehlikeli İlk 8s = S4 + T4/T5/T10/T12 + 4. bölüm). PDF "YÜZ YÜZE TAMAMLAMA EĞİTİM KATILIM FORMU (KARMA)" başlığıyla basılır.',
+                        ],
+                    ],
+                    [
+                        'baslik' => 'NACE Uyuşmuyorsa & Tüm Sektörlere AI ile Konu Ekleme',
+                        'etiket' => 'Sektör & AI',
+                        'maddeler' => [
+                            'Firmanın SGK NACE kodu yaptığı işle tutmuyorsa "İşyerine Özgü Risk Sektörü" açılır listesinden gerçek işi seçin — bu seçim firmada hatırlanır ve Yıllık Eğitim Planı ile ortak çalışır.',
+                            '4. bölüm kutusundaki "✨ AI ile İşe Özgü Konu Üret" butonuyla o firma veya ekip için saniyeler içinde yeni konular üretebilir, isterseniz kütüphaneye kaydedip aynı sektördeki tüm firmalarda kullanabilirsiniz.',
+                            'Konu ekledikçe, sildikçe, tik kaldırdıkça veya "Ders Saati"ni değiştirdikçe dakika dağılımı toplam süreye göre kayıpsız yeniden hesaplanır (elle dakika yazarsanız sizin değeriniz korunur).',
+                        ],
+                    ],
+                    [
+                        'baslik' => 'Şantiyede Kalıp Ekibi ile Sıva Ekibine Ayrı Eğitim Verme',
+                        'etiket' => 'Ekip Ayrımı',
+                        'maddeler' => [
+                            'Önce "Çalışan Grubu / İş Kolu" altında "Kalıp, İskele ve Demir İşleri" etiketine tıklayın → 4. bölümde yalnız kalıp/iskele/demir konuları kalır (kazı/sıva karışmaz).',
+                            '3. Katılımcı Listesinde "Görev" filtresinden "Kalıpçı" seçip "Yalnız bu listedekileri seç" deyin ve kaydedip PDF alın.',
+                            'Üstten "Yeni kayıt"a basıp bu kez "Sıva, Boya ve Yüzey Kaplama" + "Sıvacı" seçerek ikinci ekibin ayrı tutanağını oluşturun. Her iki ekip Yıllık Eğitim Planında 👷 rozetiyle ve Excel\'de [EKİP: ...] etiketiyle ayrı görünür.',
+                        ],
+                    ],
+                    [
+                        'baslik' => 'Önerilen Uçtan Uca İş Akışı (Hangi Ekrandan Başlamalı?)',
+                        'etiket' => 'İş Akışı',
+                        'maddeler' => [
+                            'Adım 1 — İşe Özgü Eğitim Konuları: "✨ API / AI ile Sektör Konuları Üret" ile 21 sektörün kütüphanesini doldurun.',
+                            'Adım 2 — Yıllık Eğitim Planı: Karma planı uygulayın, NACE uyuşmayan firmada Gerçek İş Grubu seçip "Aynı İş Grubundaki Firmalara Eşitle" yapın.',
+                            'Adım 3 — Online Eğitim Atama & Takip: Çalışanlara LMS 8s/4s online eğitimi atayın; bitirenler planda otomatik G (Gerçekleşti) işlenir.',
+                            'Adım 4 — Eğitim Katılım (Karma): Kalan 4s/8s yüz yüze oturumun imza tutanağını, 10 soruluk sınav kâğıdını ve sertifikalarını tek tıkla alın.',
+                        ],
+                    ],
+                ],
+                'sure_tablosu' => static::egitimSureTablosu(),
+                'yonlendirmeler' => static::egitimYonlendirmeleri(),
+                'ipucu' => 'RG 02.04.2026 (33212) Md.12/3 gereği Tehlikeli ve Çok Tehlikeli sınıflarda 4. Bölüm (İşe ve İşyerine Özgü Riskler) mutlaka yüz yüze verilmelidir. Çıktı Al ▾ menüsü önce kaydedip sonra belge üretir; kopya kayıt açmaz.',
             ],
             Pages\IsbasiEgitim::class => [
                 'baslik' => 'İşbaşı Oryantasyon Eğitimi',
-                'ozet' => 'Yeni işe başlayan çalışanlar için en az 2 saatlik pratik işbaşı eğitim tutanağını canlı imzayla hazırlayın.',
+                'ozet' => 'Yeni işe başlayan, bölümü/makinesi değişen veya iş kazası sonrası dönen çalışanlar için en az 2 saatlik uygulamalı işbaşı eğitim tutanağını canlı imzayla hazırlayın.',
                 'adimlar' => [
-                    'Firmayı ve çalışanı seçin veya SGK İşe Giriş PDF\'ini yükleyerek bilgileri otomatik doldurun.',
-                    'Eğitim konularını işaretleyin ve çalışandan "📱 Ekrandan Canlı İmza" alın.',
-                    'İmzalı tutanağı PDF olarak indirip özlük dosyasına ekleyin.',
+                    'Firmayı ve çalışanı seçin veya SGK İşe Giriş Bildirgesi PDF\'ini yükleyerek kimlik/görev alanlarını otomatik doldurun.',
+                    'Çalışanın yapacağı işe ve kullanacağı ekipmana özgü oryantasyon başlıklarını işaretleyin.',
+                    'Çalışandan "📱 Ekrandan Canlı İmza" alın ve imzalı tutanağı PDF indirip özlük dosyasına ekleyin.',
                 ],
-                'ipucu' => 'İşbaşı eğitimi yeni işe girişte, iş/makine değişikliğinde ve iş kazası sonrası işe dönüşte zorunludur.',
+                'yonlendirmeler' => [
+                    ['sinif' => Pages\EgitimKatilim::class, 'ikon' => '📝', 'etiket' => 'Temel İSG Eğitim Katılım', 'aciklama' => 'İşbaşı sonrası temel 8/12/16 saatlik İSG eğitim tutanağına geçin.'],
+                    ['sinif' => Pages\EgitimYenilemeTakibi::class, 'ikon' => '🔄', 'etiket' => 'Eğitim Yenileme Takibi', 'aciklama' => 'Eğitimi eksik veya vadesi gelen tüm çalışanları görün.'],
+                    ['sinif' => Pages\ToolboxKonusmalari::class, 'ikon' => '🗣️', 'etiket' => 'Toolbox Konuşmaları', 'aciklama' => 'Saha başı 5 dakikalık kısa güvenlik hatırlatması düzenleyin.'],
+                ],
+                'ipucu' => 'İşbaşı eğitimi (en az 2 saat) fiilen işe başlamadan önce verilir ve temel İSG eğitim süresinden sayılmaz (RG 02.04.2026 Md.7).',
+            ],
+            Pages\EgitimYenilemeTakibi::class => [
+                'baslik' => 'Eğitim Takibi & Yenileme Matrisi',
+                'ozet' => 'Tüm firmalarınızdaki çalışanların temel İSG, işbaşı ve özel eğitim geçerlilik tarihlerini renk kodlu takip edin; süresi yaklaşanları tek tıkla eğitime alın.',
+                'adimlar' => [
+                    'Üstten firmayı veya tüm portföyü süzerek "Eksik", "Süresi Geçti" ve "Yaklaşıyor" çalışanları görün.',
+                    'Yüz yüze eğitim verilecekler için Eğitim Katılım sayfasına, online yenileme için Online Eğitim Atama veya Yıl Başı Toplu Eğitim ekranına geçin.',
+                    'Planlı kayıtlarda eğitim tamamlandığında "Katılım / Sonuç" alanından geçenleri işaretleyerek takibi güncelleyin.',
+                ],
+                'sure_tablosu' => static::egitimSureTablosu(),
+                'yonlendirmeler' => static::egitimYonlendirmeleri(),
+                'ipucu' => 'Tekrar eğitimleri tüm tehlike sınıflarında en az 8 saattir (4s Online + 4s Yüz Yüze) ve Çok Tehlikeli\'de yılda 1, Tehlikeli\'de 2 yılda 1, Az Tehlikeli\'de 3 yılda 1 yenilenir.',
+            ],
+            Pages\SertifikaOlustur::class => [
+                'baslik' => 'Eğitim Sertifikası Oluşturma (7 Çerçeve & Arkalı-Önlü)',
+                'ozet' => 'Temel İSG, Yüksekte Çalışma, Kapalı Alan veya Özel Eğitimler için 7 kurumsal çerçeve, Tek Sayfa / Arkalı-Önlü düzen ve Yıldız Grup formatında toplu sertifika (PDF/ZIP) basın.',
+                'adimlar' => [
+                    'Firmayı, sertifika tipini (İSG, Yüksekte Çalışma vb.), eğitim türünü (İlk Defa / Tekrar) ve tarihleri seçin.',
+                    'Çerçeve stilini (7 seçenek) ve düzeni (Tek Sayfa veya Arkalı-Önlü: 1. sayfa geniş sertifika, 2. sayfa detaylı müfredat) belirleyin.',
+                    'Katılımcıları seçip "PDF İndir" veya kişi başı ayrı dosya için "ZIP İndir" butonuna tıklayın.',
+                ],
+                'yonlendirmeler' => [
+                    ['sinif' => Pages\EgitimKatilim::class, 'ikon' => '📝', 'etiket' => 'Eğitim Katılım Formu', 'aciklama' => 'Katılım tutanağından doğrudan sertifika ve Yıldız Grup çıktısı alın.'],
+                    ['sinif' => Pages\UzaktanEgitimTakip::class, 'ikon' => '📊', 'etiket' => 'Online Eğitim Takip', 'aciklama' => 'Online sınavı geçen çalışanların QR doğrulamalı belgelerini görün.'],
+                    ['sinif' => Pages\Profilim::class, 'ikon' => '🖋️', 'etiket' => 'Profilim (Kaşe & İmza)', 'aciklama' => 'Sertifikaya basılacak İGU / Hekim kaşesini güncelleyin.'],
+                ],
+                'ipucu' => 'Eğitim Katılım Formu\'nda oluşturduğunuz bir kaydın "Çıktı Al ▾ → Katılımcı Sertifikaları" veya "Yıldız Grup" seçeneğini kullanırsanız konular ve katılımcılar yeniden girmeden otomatik aktarılır.',
+            ],
+            EgitimPaketiResource::class => [
+                'baslik' => 'Online Eğitim Paketleri (LMS)',
+                'ozet' => 'Uzaktan verilecek temel İSG (8 saat İlk Defa / 4 saat Yenileme) ve özel eğitim paketlerini, ders slaytlarını, videolarını ve sınav kurallarını yönetin.',
+                'adimlar' => [
+                    'Mevcut paketlerden birini düzenleyin veya "+ Yeni Eğitim Paketi" ile kendi müfredatınızı oluşturun.',
+                    'Paket içindeki modüllere video/slayt, minimum izleme süresi ve geçme puanı (varsayılan ≥60/70) tanımlayın.',
+                    'Hazır paketi Online Eğitim Atama ekranından firma çalışanlarına gönderin.',
+                ],
+                'sure_tablosu' => static::egitimSureTablosu(),
+                'yonlendirmeler' => static::egitimYonlendirmeleri(),
+                'ipucu' => 'LMS paketleri 8 saat (İlk Defa) ve 4 saat (Yenileme) olarak Yıllık Eğitim Planı "Karma — MEHSE LMS" moduyla birebir eşleşir.',
+            ],
+            Pages\UzaktanEgitimFirmaAyarlari::class => [
+                'baslik' => 'Online Eğitim Firma Ayarları',
+                'ozet' => 'Her firma için uzaktan eğitim izinlerini, geçme puanını, sertifika şablonunu ve çalışan giriş/SMS tercihlerini yapılandırın.',
+                'adimlar' => [
+                    'Listeden firmayı seçerek online eğitim kullanımını ve varsayılan paket tercihlerini belirleyin.',
+                    'Çalışanların kimlik doğrulama, sınav tekrar hakkı ve otomatik hatırlatma seçeneklerini kaydedin.',
+                    'Ayarlar tamamlandıktan sonra Online Eğitim Atama ekranından çalışanlara link gönderin.',
+                ],
+                'yonlendirmeler' => static::egitimYonlendirmeleri(),
+                'ipucu' => 'Online eğitim aktif olan Tehlikeli/Çok Tehlikeli firmalarda Eğitim Katılım Formu açıldığında otomatik "Karma (Yüz Yüze Tamamlama)" önerilir.',
+            ],
+            Pages\UzaktanEgitimAtama::class => [
+                'baslik' => 'Online Eğitim Atama (Çalışana Link / WhatsApp)',
+                'ozet' => 'Seçili firmanın çalışanlarına tek tıkla İlk Defa (8s) veya Yenileme (4s) uzaktan İSG eğitimi atayın ve kişisel erişim bağlantısı gönderin.',
+                'adimlar' => [
+                    'Firmayı, eğitim paketini ve eğitim türünü (İlk Defa / Yenileme) seçin.',
+                    'Eğitim atanacak aktif çalışanları işaretleyin (veya tümünü seçin) ve son tamamlama tarihini girin.',
+                    'Atamayı oluşturup çalışanlara WhatsApp / SMS / e-posta bağlantısını iletin; ilerlemeyi Online Eğitim Takip ekranından izleyin.',
+                ],
+                'sure_tablosu' => static::egitimSureTablosu(),
+                'yonlendirmeler' => static::egitimYonlendirmeleri(),
+                'ipucu' => 'Tehlikeli ve Çok Tehlikeli sınıflarda online atama 1.–3. bölümleri kapsar; çalışanlar online kısmı bitirdikten sonra Eğitim Katılım Formu (Karma) ile kalan yüz yüze oturumu tamamlayın.',
+            ],
+            Pages\UzaktanEgitimTakip::class => [
+                'baslik' => 'Online Eğitim Takip & Otomatik Plan İşleme',
+                'ozet' => 'Çalışanların uzaktan eğitim izleme yüzdelerini, ön/son test puanlarını ve tamamlama belgelerini canlı takip edin.',
+                'adimlar' => [
+                    'Firmaya göre filtreleyip "Bekliyor", "Devam Ediyor" ve "Tamamlandı" durumlarını inceleyin.',
+                    'Eksik kalan çalışanlara hatırlatma gönderin; tamamlayanların sınav ve katılım belgelerini indirin.',
+                    'Tamamlanan online eğitimler firmanın Yıllık Eğitim Planında ilgili online konuların ayına otomatik "G (Gerçekleşti)" olarak işlenir.',
+                ],
+                'yonlendirmeler' => static::egitimYonlendirmeleri(),
+                'ipucu' => 'Online kısmı tamamlayan Tehlikeli/Çok Tehlikeli çalışanlar için şimdi "Eğitim Katılım Formu → Yüz Yüze Tamamlama (Karma)" ekranından kalan 4s/8s oturumun imza tutanağını alabilirsiniz.',
+            ],
+            Pages\UzaktanEgitimYilBasi::class => [
+                'baslik' => 'Yıl Başı Toplu Online Eğitim Planlama',
+                'ozet' => 'Yeni yıl başında veya toplu yenileme dönemlerinde tüm aktif firmalarınızdaki vadesi gelen çalışanlara tek seferde online yenileme eğitimi atayın.',
+                'adimlar' => [
+                    'Hedef yılı ve yenileme kapsamındaki firmaları/çalışanları listeleyin.',
+                    'Uygulanacak yenileme paketini (4 saat Online) ve son tarihi seçin.',
+                    'Toplu atamayı başlatın ve sonuçları Online Eğitim Takip ekranından izleyin.',
+                ],
+                'yonlendirmeler' => static::egitimYonlendirmeleri(),
+                'ipucu' => 'Toplu atama zaten aktif/geçerli eğitimi bulunan çalışanlara mükerrer atama açmaz.',
+            ],
+            Pages\UzaktanEgitimSorulari::class => [
+                'baslik' => 'Online Eğitim Sınav Soruları',
+                'ozet' => 'Uzaktan eğitim (LMS) ön test ve son test değerlendirmelerinde çalışanların karşısına çıkacak çoktan seçmeli soruları yönetin.',
+                'adimlar' => [
+                    'İlgili eğitim paketini veya konu kategorisini seçerek mevcut soruları inceleyin.',
+                    'Yeni soru ekleyin, doğru şıkkı işaretleyin veya pasif soruları düzenleyin.',
+                    'Sektöre özel yeni sorular üretmek için "AI ile Soru / Sınav" sayfasını kullanın.',
+                ],
+                'yonlendirmeler' => static::egitimYonlendirmeleri(),
+                'ipucu' => 'Sorular çalışanlara rastgele sırayla sunulur; geçme puanını sağlayanlar sertifika almaya hak kazanır.',
+            ],
+            Pages\SoruBankasi::class => [
+                'baslik' => 'İSG Soru Bankası',
+                'ozet' => 'Yüz yüze sınav kâğıtlarında ve online eğitim sınavlarında kullanılacak tüm çoktan seçmeli soru havuzunuzu tek yerde yönetin.',
+                'adimlar' => [
+                    'Kategori veya sektör anahtar kelimesiyle mevcut soruları arayın ve düzenleyin.',
+                    'Elle yeni soru ekleyin veya "AI ile Soru / Sınav" ekranından toplu soru üretip bankaya aktarın.',
+                    'Eğitim Katılım Formu\'ndaki "10 Soruluk Sınav Kâğıdı & Cevap Anahtarı PDF" çıktısı bu havuzdan otomatik beslenir.',
+                ],
+                'yonlendirmeler' => static::egitimYonlendirmeleri(),
+                'ipucu' => 'Soru bankanız ne kadar zenginse her firma ve ekip için farklılaşan, tekrar etmeyen değerlendirme sınavları üretebilirsiniz.',
+            ],
+            Pages\EgitimSorulari::class => [
+                'baslik' => 'AI ile Eğitim Sorusu & Sınav Kâğıdı Üretici',
+                'ozet' => 'Seçili firma, sektör veya özel eğitim konusu için yapay zekâ ile çoktan seçmeli ön/son test soruları ve cevap anahtarı oluşturun.',
+                'adimlar' => [
+                    'Firmayı, eğitim konusunu (örn. Yüksekte Çalışma, Kalıp İşleri, Metal İmalat) ve soru sayısını belirleyin.',
+                    'Yapay zekâ ile soruları üretip şıkları ve doğru cevapları gözden geçirin.',
+                    'Beğendiğiniz soruları Soru Bankasına kaydedin veya doğrudan PDF sınav kâğıdı olarak yazdırın.',
+                ],
+                'yonlendirmeler' => static::egitimYonlendirmeleri(),
+                'ipucu' => 'Sektöre özgü 4. bölüm eğitimleri için bu ekrandan ekibe özel 10 soruluk sınav üretip Eğitim Katılım tutanağıyla birlikte arşivleyebilirsiniz.',
+            ],
+            Pages\ToolboxKonusmalari::class => [
+                'baslik' => 'Toolbox (5 Dakikalık Saha Konuşmaları)',
+                'ozet' => 'Vardiya veya kritik iş öncesi sahada yapılan 5 dakikalık kısa İSG bilgilendirmelerini konu metni ve katılımcı imzasıyla belgeleyin.',
+                'adimlar' => [
+                    'Firmayı ve saha konusunu (iskele, sıcak iş, forklift, KKD vb.) seçin veya özel konu yazın.',
+                    'Konuşmaya katılan çalışanları işaretleyin (şube/görev bazlı seçebilirsiniz).',
+                    'Tek sayfalık Toolbox tutanağı PDF\'ini indirip sahada imzalatarak arşivleyin.',
+                ],
+                'yonlendirmeler' => static::egitimYonlendirmeleri(),
+                'ipucu' => 'Toolbox konuşmaları şantiyelerde ve üretim sahalarında iş kazalarını önlemenin ve denetimlerde aktif İSG kültürünü kanıtlamanın en pratik yoludur.',
+            ],
+            Pages\IseOzguEgitimKonulari::class => [
+                'baslik' => 'İşe Özgü Eğitim Konuları Kütüphanesi (4. Bölüm & API / AI)',
+                'ozet' => 'Yıllık Eğitim Planı ve Eğitim Katılım Formu\'nun 4. Bölümünü ("İşe ve İşyerine Özgü Riskler") besleyen merkezi kütüphane. Gemini API ile tüm 21 sektörü tek tıkla doldurabilirsiniz.',
+                'adimlar' => [
+                    'Sağ üstteki "✨ API / AI ile Sektör Konuları Üret" butonuna tıklayın.',
+                    'Tek sektör, birden çok sektör veya "Tüm sektörler için toplu üret (21 sektör)" seçeneğini belirleyip sektör başına konu adedini (örn. 5) seçin.',
+                    'Üretilen konular otomatik NACE ön ekleriyle kütüphaneye kaydedilir; o NACE\'deki tüm firmaların Yıllık Eğitim Planı ve Eğitim Katılım formlarına doğrudan entegre olur.',
+                    'İsterseniz "Yeni Konu" ile belirli bir ekibe (ör. Kalıp Ekibi, Sıva Ekibi) özel konu ekleyebilir veya sistem konularını düzenleyip gizleyebilirsiniz.',
+                ],
+                'bolumler' => [
+                    [
+                        'baslik' => 'Kütüphane Diğer Ekranlarla Nasıl Senkron Çalışır?',
+                        'etiket' => 'Otomatik Entegrasyon',
+                        'maddeler' => [
+                            'Yıllık Eğitim Planı: Yeni plan açılırken veya "İşe Özgü Konuları Seç" modalında firmanın NACE koduna/iş kalemine uyan kütüphane konuları ★ yıldızlı önerilir.',
+                            'Eğitim Katılım Formu: Kütüphaneye eklediğiniz kendi/AI sektör konuları o NACE\'deki firmalarda otomatik gelir; "İş kolu" etiketi verdiğiniz konular ise yalnız o ekip seçildiğinde eklenir.',
+                            'Otomatik Süre Dağıtımı: Kütüphaneden kaç konu seçerseniz seçin, hem Yıllık Eğitim Planı saatleri hem Eğitim Katılım dakikaları toplam yasal süreye göre otomatik bölünür.',
+                        ],
+                    ],
+                ],
+                'yonlendirmeler' => static::egitimYonlendirmeleri(),
+                'ipucu' => '21 sektörü tek seferde üretmek ~1–2 dakika sürebilir; daha hızlı kontrol etmek için 4–5\'erli sektör grupları hâlinde de üretebilirsiniz.',
+            ],
+            Pages\YillikPlan\YillikEgitimPlani::class => [
+                'baslik' => 'Yıllık Eğitim Planı — Online / Yüz Yüze Karma & 4. Bölüm Yönetimi',
+                'ozet' => 'RG 02.04.2026 (33212) uyumlu yıllık eğitim planını Online + Yüz Yüze (Karma) olarak planlayın, NACE uyuşmayan firmalarda Gerçek İş Grubu atayın ve aynı işi yapan firmaları tek tıkla eşitleyin.',
+                'adimlar' => [
+                    'Firmayı ve yılı seçin; üst yeşil şeritten "Karma — MEHSE LMS (8s/4s Online + Kalanı Yüz Yüze)" modunu seçip "Online / Yüz Yüze Otomatik Planla" butonuna basın.',
+                    'NACE kodu gerçek işiyle uyuşmayan firmada "4. Bölüm Gerçek İş Grubu" seçicisinden doğru sektörü seçin ve "4. Bölümü Gruba Göre Doldur" deyin.',
+                    '4. bölümü düzenledikten sonra "Aynı İş Grubundaki Firmalara Eşitle" butonuna basarak aynı işi yapan tüm firmaların 4. bölümünü tek tıkla güncelleyin (tamamlanmış G ayları korunur).',
+                    'Alttaki "✨ AI ile 4. Bölüm Üret" veya "+ Ekle" ile konu ekledikçe/sildikçe satır saatleri toplam eğitim süresine göre otomatik güncellenir; hazır olduğunda Excel çıktısı alın.',
+                ],
+                'bolumler' => [
+                    [
+                        'baslik' => 'RG 02.04.2026 Mevzuat Kilidi & Otomatik G İşleme',
+                        'etiket' => 'Otomasyon',
+                        'maddeler' => [
+                            'Tehlikeli ve Çok Tehlikeli sınıflarda 4. Bölüm (İşe Özgü) ve 5. Bölüm (Diğer Uygulamalı Eğitimler) kilitli olarak "Yüz Yüze 🔒" kalır; yanlışlıkla Online yapılamaz.',
+                            'Çalışanlar LMS üzerinden online eğitimi bitirdiğinde ilgili online konular o ay otomatik "G (Gerçekleşti)" işlenir; yüz yüze katılım formu kaydedildiğinde de yüz yüze konular "G" olur.',
+                            'Eğitim Katılım Formunda ekip bazlı (Kalıp / Sıva) eğitim kaydedildiğinde o ekibin konuları plana 👷 ekip rozetiyle ve Excel C sütununa [EKİP: ...] etiketiyle işlenir.',
+                        ],
+                    ],
+                ],
+                'sure_tablosu' => static::egitimSureTablosu(),
+                'yonlendirmeler' => [
+                    ['sinif' => Pages\IseOzguEgitimKonulari::class, 'ikon' => '✨', 'etiket' => 'İşe Özgü Konular (API / AI)', 'aciklama' => 'Tüm 21 sektör için 4. Bölüm kütüphanesini API ile doldurun.'],
+                    ['sinif' => Pages\EgitimKatilim::class, 'ikon' => '📝', 'etiket' => 'Eğitim Katılım Formu (3 Mod)', 'aciklama' => 'Plandaki 4. bölümle birebir eşleşen yüz yüze / karma / online tutanak üretin.'],
+                    ['sinif' => Pages\UzaktanEgitimAtama::class, 'ikon' => '💻', 'etiket' => 'Online Eğitim Ata (LMS)', 'aciklama' => 'Plandaki online saatleri çalışanlara hemen atayın.'],
+                    ['sinif' => Pages\YillikPlan\YillikCalismaPlani::class, 'ikon' => '📋', 'etiket' => 'Yıllık Çalışma Planı', 'aciklama' => 'Aynı firmanın Yıllık Çalışma Planına geçin.'],
+                    ['sinif' => Pages\YillikPlan\YillikDegerlendirmeRaporu::class, 'ikon' => '📊', 'etiket' => 'Yıllık Değerlendirme Raporu', 'aciklama' => 'Yıl sonu değerlendirme raporunu sistem kayıtlarından otomatik doldurun.'],
+                ],
+                'ipucu' => 'Tehlikeli sınıfta 4. Bölüm 4 saat (8s Online + 4s Yüz Yüze = 12s; Tekrar 4s Online + 4s Yüz Yüze = 8s) olarak planlanır ve Eğitim Katılım Formu ile birebir eşleşir.',
             ],
             Pages\MuayeneFormu::class => [
                 'baslik' => 'İşe Giriş / Periyodik Muayene Formu (EK-2)',

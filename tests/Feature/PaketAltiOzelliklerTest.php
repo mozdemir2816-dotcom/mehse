@@ -125,4 +125,52 @@ class PaketAltiOzelliklerTest extends TestCase
             ->assertOk()
             ->assertSee('Nasıl Kullanılır?');
     }
+
+    public function test_egitim_ve_sinav_sayfalarinda_detayli_rehber_ve_yonlendirmeler_calisir(): void
+    {
+        $sayfalar = [
+            \App\Filament\Pages\EgitimKatilim::class,
+            \App\Filament\Pages\IsbasiEgitim::class,
+            \App\Filament\Pages\EgitimYenilemeTakibi::class,
+            \App\Filament\Pages\SertifikaOlustur::class,
+            \App\Filament\Resources\EgitimPaketis\EgitimPaketiResource::class,
+            \App\Filament\Pages\UzaktanEgitimFirmaAyarlari::class,
+            \App\Filament\Pages\UzaktanEgitimAtama::class,
+            \App\Filament\Pages\UzaktanEgitimTakip::class,
+            \App\Filament\Pages\UzaktanEgitimYilBasi::class,
+            \App\Filament\Pages\UzaktanEgitimSorulari::class,
+            \App\Filament\Pages\SoruBankasi::class,
+            \App\Filament\Pages\EgitimSorulari::class,
+            \App\Filament\Pages\ToolboxKonusmalari::class,
+            \App\Filament\Pages\IseOzguEgitimKonulari::class,
+            \App\Filament\Pages\YillikPlan\YillikEgitimPlani::class,
+        ];
+
+        foreach ($sayfalar as $sinif) {
+            $rehber = SayfaRehberi::bul([$sinif]);
+            $this->assertNotNull($rehber, $sinif.' için Nasıl Kullanılır rehberi tanımlı olmalı');
+            $this->assertNotEmpty(SayfaRehberi::yonlendirmeler($rehber, [$sinif]), $sinif.' için yönlendirme bağlantıları olmalı');
+        }
+
+        // Eğitim Katılım sayfasında detaylı bölümler, yasal süre tablosu ve firma parametreli yönlendirme linkleri basılır
+        $this->get(\App\Filament\Pages\EgitimKatilim::getUrl(['firma' => $this->firma->id]))
+            ->assertOk()
+            ->assertSee('Nasıl Kullanılır?')
+            ->assertSee('Ekranlara Yönlendirme')
+            ->assertSee('3 Ayrı Eğitim Katılım Formu Nasıl Kullanılır?')
+            ->assertSee('Kalıp Ekibi ile Sıva Ekibine Ayrı Eğitim Verme')
+            ->assertSee('Yasal Süre & Karma Dağılım Tablosu', false)
+            ->assertSee('firma='.$this->firma->id, false);
+
+        // İşe Özgü Eğitim Konuları ve Yıllık Eğitim Planı sayfalarında da görünür
+        $this->get(\App\Filament\Pages\IseOzguEgitimKonulari::getUrl(['firma' => $this->firma->id]))
+            ->assertOk()
+            ->assertSee('Nasıl Kullanılır?')
+            ->assertSee('Kütüphane Diğer Ekranlarla Nasıl Senkron Çalışır?');
+
+        $this->get(\App\Filament\Pages\YillikPlan\YillikEgitimPlani::getUrl(['firma' => $this->firma->id]))
+            ->assertOk()
+            ->assertSee('Nasıl Kullanılır?')
+            ->assertSee('RG 02.04.2026 Mevzuat Kilidi');
+    }
 }
