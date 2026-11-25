@@ -85,6 +85,11 @@ class YillikPlanExcelUretici
         $kitap = IOFactory::load(resource_path(self::EGITIM_SABLONU));
         $s = $kitap->getSheet(0);
 
+        // Eğitici sütununda (D) hem eğitici adı hem [ONLİNE (UZAKTAN)] / [YÜZ YÜZE] / [KARMA ...]
+        // etiketi taşmadan sığsın: C'den (61.7) küçük pay alarak D'yi 16.6 → 23.5 genişlet (toplam genişlik değişmez).
+        $s->getColumnDimension('C')->setWidth(54.8);
+        $s->getColumnDimension('D')->setWidth(23.5);
+
         $s->setCellValue('C1', $plan->yil.' YILLIK EĞİTİM PLANI');
         $s->setCellValue('H1', 'FİRMA ADI: '.self::buyuk($firma->unvan)
             ."\nFİRMA ADRESİ: ".self::buyuk(self::adres($firma))
@@ -197,7 +202,23 @@ class YillikPlanExcelUretici
                 $egiticiMetin = trim($egiticiMetin."\n[".$yontemEtiket.']');
             }
             $s->setCellValue("D{$r}", $egiticiMetin);
-            $s->getStyle("D{$r}")->getAlignment()->setWrapText(true);
+            $dStil = $s->getStyle("D{$r}");
+            $dStil->getFont()->setSize(8.5);
+            $dStil->getAlignment()
+                ->setWrapText(true)
+                ->setHorizontal(Alignment::HORIZONTAL_CENTER)
+                ->setVertical(Alignment::VERTICAL_CENTER);
+
+            // Eğitici + yöntem metni uzun olursa satır yüksekliği taşmayı önleyecek kadar genişletilir.
+            $tahminiSatir = 0;
+            foreach (explode("\n", $egiticiMetin) as $parca) {
+                $tahminiSatir += max(1, (int) ceil(mb_strlen(trim($parca), 'UTF-8') / 24));
+            }
+            $gerekenYukseklik = $tahminiSatir * 13 + 8;
+            $mevcutYukseklik = $s->getRowDimension($r)->getRowHeight();
+            if ($mevcutYukseklik > 0 && $gerekenYukseklik > $mevcutYukseklik) {
+                $s->getRowDimension($r)->setRowHeight($gerekenYukseklik);
+            }
             $hafta = max(1, min(4, (int) ($m['hafta'] ?? 2)));
 
             foreach (($m['aylar'] ?? []) as $ay => $durum) {
