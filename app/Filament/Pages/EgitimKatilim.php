@@ -354,6 +354,7 @@ class EgitimKatilim extends Page
     {
         if ($this->firma) {
             IseOzguSenkron::firmaGrubuKaydet($this->firma, null);
+            IseOzguSenkron::firmaOzelKaydet($this->firma, false);
         }
 
         $this->sektorAnahtari = $this->naceSektoru;
@@ -644,7 +645,7 @@ class EgitimKatilim extends Page
 
         foreach ($onekler as $onek) {
             $kayit = EgitimKatilimModel::query()
-                ->with('firma:id,unvan')
+                ->with('firma')
                 ->where('firma_id', '!=', $this->firma->id)
                 ->whereHas('firma', fn ($q) => $q->where('user_id', Filament::auth()->id())->where('nace_kodu', 'like', $onek.'%'))
                 ->where('baslik_anahtari', $this->baslikAnahtari)
@@ -652,7 +653,11 @@ class EgitimKatilim extends Page
                 ->orderByRaw('egitim_turu = ? desc', [$this->egitimTuru])
                 ->latest('belge_tarihi')
                 ->latest('id')
-                ->first();
+                ->get()
+                // NACE'si aynı olsa da firmaya özel / NACE dışı konu eklenmiş kayıtlar başka firmalara taşınmaz.
+                ->first(fn (EgitimKatilimModel $k) => ! ($k->konu_secimleri['firma_ozel'] ?? false)
+                    && ! ($k->konu_secimleri['sektor_elle'] ?? false)
+                    && ! IseOzguSenkron::firmaOzelMi($k->firma));
 
             if ($kayit) {
                 return $kayit;
@@ -724,9 +729,13 @@ class EgitimKatilim extends Page
         $this->gunTarihleriYenile();
     }
 
-    /** Belge tarihi değişince, henüz doldurulmamış gün tarihlerini yeniden türet. */
+    /** Belge tarihi değişince, henüz doldurulmamış gün tarihlerini türet ve yıl değiştiyse 4. bölümü o yılın planından çek. */
     public function updatedBelgeTarihi(): void
     {
+        if ($this->baslikAnahtari === 'genel' && $this->isKolu === '' && $this->firma && $this->planOzguBolumunuKur()) {
+            $this->blokSuresiniDagit('isyerine_ozgu');
+        }
+
         $this->gunTarihleriYenile();
     }
 
@@ -1017,13 +1026,23 @@ class EgitimKatilim extends Page
                     }
 
                     $this->icerik['isyerine_ozgu']['maddeler'] = $mevcutlar;
+                    // Seçilen sektör firmanın NACE'sinden farklıysa veya özel saha bağlamı girildiyse
+                    // yalnız bu firmada kayıtlı kalsın; aynı NACE'deki diğer firmaların (ör. inşaat) şablonunu bozmasın.
+                    $naceFarkli = filled($this->naceSektoru) && $sektorAnahtar !== $this->naceSektoru;
+                    if ($naceFarkli || filled($ekBaglam)) {
+                        $this->icerik['firma_ozel'] = true;
+                        if ($this->firma) {
+                            IseOzguSenkron::firmaOzelKaydet($this->firma, true);
+                        }
+                    }
                     $this->blokSuresiniDagit('isyerine_ozgu');
                     $this->sureGunYenile();
                 }
 
                 $kaydedilen = 0;
                 if (! empty($data['kutuphaneye_kaydet']) && ($userId = Filament::auth()->id())) {
-                    $nace = GeminiIseOzguEgitimUretici::sektorNaceOnekleri($sektorAnahtar, $this->firma?->nace_kodu);
+                    // Kütüphaneye kaydederken seçilen sektörün kendi NACE'sini kullan (firmanın inşaat NACE'sine bulaştırma!)
+                    $nace = GeminiIseOzguEgitimUretici::sektorNaceOnekleri($sektorAnahtar);
                     $kaydedilen = GeminiIseOzguEgitimUretici::kutuphaneyeKaydet($userId, $sonuc['konular'], $nace, $isKolu, $this->isKoluKalemleri);
                 }
 
@@ -1451,6 +1470,9 @@ Formda yazdığınız gibi görünür; Çalışanlar sayfasından düzeltebilirs
         $icerik = EgitimIcerikOlusturucu::bosKonulariAyikla($this->icerik);
         $icerik['saat'] = $this->dersSaati ?: null;
         $icerik['sektor_elle'] = $this->baslikAnahtari === 'genel' && $this->sektorElle;
+        if ($icerik['sektor_elle'] || IseOzguSenkron::firmaOzelMi($this->firma)) {
+            $icerik['firma_ozel'] = true;
+        }
 
         $kayit = $this->kayitIcin(EgitimKatilimModel::class, [
             'firma_id' => $this->firma->id,

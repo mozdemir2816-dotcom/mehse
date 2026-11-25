@@ -546,4 +546,67 @@ class EgitimKatilimYillikPlanSenkronTest extends TestCase
             @unlink($sonuc['zip_yolu']);
         }
     }
+
+    public function test_insaat_naceli_firmaya_farkli_konular_eklenirse_yalniz_o_firmada_kalir_diger_insaat_sablonunu_bozmaz(): void
+    {
+        config(['services.gemini.key' => 'test-key-789']);
+
+        $ozelInsaat = Firma::factory()->for($this->uzman)->create(['unvan' => 'Özel İşi Olan İnşaat A.Ş.', 'tehlike_sinifi' => 'cok_tehlikeli', 'nace_kodu' => '41.00.01']);
+        $normalInsaat = Firma::factory()->for($this->uzman)->create(['unvan' => 'Normal Şantiye A.Ş.', 'tehlike_sinifi' => 'cok_tehlikeli', 'nace_kodu' => '41.00.02']);
+
+        Http::fake([
+            'generativelanguage.googleapis.com/*' => Http::response([
+                'candidates' => [[
+                    'content' => [
+                        'parts' => [[
+                            'text' => json_encode([
+                                ['ad' => 'Sadece Bu Firmaya Özel Asansör Bakımı', 'hedef' => 'Kuyu güvenliği.', 'egitici' => 'İŞ GÜVENLİĞİ UZMANI'],
+                                ['ad' => 'Sadece Bu Firmaya Özel Elektronik Kart Lehimi', 'hedef' => 'Duman emişi.', 'egitici' => 'İŞ GÜVENLİĞİ UZMANI'],
+                            ], JSON_UNESCAPED_UNICODE),
+                        ]],
+                    ],
+                ]],
+            ], 200),
+        ]);
+
+        // 1) NACE'si inşaat (41.00.01) olan firmaya NACE dışı farklı sektör (asansor) AI konuları üretilir
+        Livewire::test(YillikEgitimPlani::class)
+            ->set('firmaId', $ozelInsaat->id)
+            ->set('yil', 2027)
+            ->callAction('aiIseOzguUret', [
+                'sektor' => 'asansor',
+                'adet' => 3,
+                'ekleme_sekli' => 'degistir',
+                'kutuphaneye_kaydet' => false,
+            ])
+            ->assertNotified();
+
+        // Bu firma otomatik olarak "Yalnız Bu Firmaya Özel" yalıtımına alınmalı
+        $this->assertTrue(IseOzguSenkron::firmaOzelMi($ozelInsaat));
+        $this->assertCount(0, IseOzguSenkron::ayniGrubunFirmalari($ozelInsaat));
+        $this->assertCount(0, IseOzguSenkron::ayniGrubunFirmalari($normalInsaat));
+
+        // 2) Diğer inşaat firmasının 2027 planı ve Eğitim Katılım Formu kendi standart inşaat şablonunda kalır — özel konular kesinlikle bulaşmaz!
+        $normalPlan = YillikPlan::firmaYilIcin($normalInsaat, 2027);
+        $normalKonular = collect($normalPlan->egitimler)->where('kategori', 'ise_ozgu')->pluck('konu')->implode(' | ');
+        $this->assertStringNotContainsString('Elektronik Kart Lehimi', $normalKonular);
+        $this->assertStringContainsString('Yüksekte Çalışma', $normalKonular);
+
+        // Eğitim Katılım Formunda da özel firmadan normal inşaat firmasına konu taşınmaz
+        Calisan::factory()->for($ozelInsaat)->create();
+        Livewire::test(EgitimSayfasi::class)
+            ->set('firmaId', $ozelInsaat->id)
+            ->set('belgeTarihi', '2027-01-10')
+            ->callAction('sadeceKaydet');
+
+        $normalKatilim = Livewire::test(EgitimSayfasi::class)->set('firmaId', $normalInsaat->id);
+        $normalKatilimKonulari = collect($normalKatilim->get('icerik')['isyerine_ozgu']['maddeler'])->pluck('madde')->implode(' | ');
+        $this->assertStringNotContainsString('Elektronik Kart Lehimi', $normalKatilimKonulari);
+
+        // 3) Normal inşaat firmasında "Aynı İş Grubundaki Firmalara Eşitle" yapılsa bile özel firmanın planı EZİLMEZ!
+        $esitlenen = IseOzguSenkron::dorduncuBolumuGrubaEsitle($normalInsaat, 2027);
+        $this->assertSame(0, $esitlenen);
+        $ozelPlan = YillikPlan::where('firma_id', $ozelInsaat->id)->where('yil', 2027)->firstOrFail();
+        $this->assertContains('Sadece Bu Firmaya Özel Elektronik Kart Lehimi', collect($ozelPlan->egitimler)->pluck('konu')->all());
+    }
 }

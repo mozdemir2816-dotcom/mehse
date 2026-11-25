@@ -142,6 +142,41 @@ class IseOzguSenkron
         KullaniciAyarlari::kaydet($user, ['firma_egitim_gruplari' => $gruplar]);
     }
 
+    /**
+     * Bu firmaya NACE/sektör şablonu dışında firmaya özel konular mı tanımlandı?
+     * true ise: bu firmanın 4. bölümü yalnız bu firmada kalır; aynı NACE'deki diğer firmalara
+     * (ör. diğer inşaat şablonlarına) taşınmaz ve grup eşitlemede de ezilmez.
+     */
+    public static function firmaOzelMi(?Firma $firma): bool
+    {
+        if (! $firma || ! $firma->user_id) {
+            return false;
+        }
+
+        $user = User::find($firma->user_id);
+        $ozeller = (array) (($user?->ayarlar ?? [])['firma_egitim_ozel'] ?? []);
+
+        return (bool) ($ozeller[(string) $firma->id] ?? $ozeller[$firma->id] ?? false);
+    }
+
+    /** Firmayı "yalnız bu firmaya özel 4. bölüm" olarak işaretler veya genel gruba geri açar. */
+    public static function firmaOzelKaydet(Firma $firma, bool $ozel): void
+    {
+        $user = User::find($firma->user_id);
+        if (! $user) {
+            return;
+        }
+
+        $ozeller = (array) (($user->ayarlar ?? [])['firma_egitim_ozel'] ?? []);
+        if ($ozel) {
+            $ozeller[(string) $firma->id] = true;
+        } else {
+            unset($ozeller[(string) $firma->id], $ozeller[$firma->id]);
+        }
+
+        KullaniciAyarlari::kaydet($user, ['firma_egitim_ozel' => $ozeller]);
+    }
+
     /** Firmanın etkin eğitim grubu: önce elle seçilen gerçek iş grubu, yoksa NACE'den türetilen sektör. */
     public static function etkinGrup(Firma $firma): ?string
     {
@@ -150,12 +185,16 @@ class IseOzguSenkron
 
     /**
      * Aynı etkin eğitim grubunda (elle seçili aynı gerçek iş grubu veya aynı NACE sınıfı/sektörü)
-     * bulunan diğer aktif firmaları döndürür.
+     * bulunan diğer aktif firmaları döndürür. Firmaya özel yalıtılmış (`firmaOzelMi`) firmalar hariç tutulur.
      *
      * @return Collection<int, Firma>
      */
     public static function ayniGrubunFirmalari(Firma $kaynak): Collection
     {
+        if (self::firmaOzelMi($kaynak)) {
+            return collect();
+        }
+
         $grup = self::etkinGrup($kaynak);
         $kaynakNace4 = substr(preg_replace('/\D/', '', (string) $kaynak->nace_kodu), 0, 4);
 
@@ -166,6 +205,9 @@ class IseOzguSenkron
             ->orderBy('unvan')
             ->get()
             ->filter(function (Firma $f) use ($grup, $kaynakNace4): bool {
+                if (self::firmaOzelMi($f)) {
+                    return false;
+                }
                 $hedefGrup = self::etkinGrup($f);
                 if ($grup !== null && $hedefGrup === $grup) {
                     return true;
@@ -263,16 +305,35 @@ class IseOzguSenkron
             substr($rakam, 0, 2),
         ]));
 
+        $hedefGrup = self::etkinGrup($firma);
+
         foreach ($onekler as $onek) {
             $planlar = YillikPlan::query()
+                ->with('firma')
                 ->where('firma_id', '!=', $firma->id)
                 ->whereHas('firma', fn ($q) => $q->withoutGlobalScopes()->where('user_id', $firma->user_id)->where('nace_kodu', 'like', $onek.'%'))
                 ->orderByDesc('yil')->orderByDesc('id')
-                ->get();
+                ->get()
+                // NACE'si aynı olsa bile firmaya özel yalıtılmış veya farklı gerçek iş grubuna alınmış
+                // firmaların konuları başka firmaların (ör. inşaat) şablonunu bozmaz.
+                ->filter(function (YillikPlan $p) use ($hedefGrup): bool {
+                    if (! $p->firma || self::firmaOzelMi($p->firma)) {
+                        return false;
+                    }
+                    $kaynakElleGrup = self::firmaGrubuOku($p->firma);
+                    if ($kaynakElleGrup !== null && $kaynakElleGrup !== $hedefGrup) {
+                        return false;
+                    }
+
+                    return true;
+                });
 
             /** @var Collection<int, array<string, mixed>> $satirlar */
             $satirlar = $planlar
-                ->map(fn (YillikPlan $p) => collect($p->egitimler ?? [])->where('kategori', 'ise_ozgu')->values())
+                ->map(fn (YillikPlan $p) => collect($p->egitimler ?? [])
+                    ->where('kategori', 'ise_ozgu')
+                    ->reject(fn (array $e) => ! empty($e['firma_ozel']))
+                    ->values())
                 ->first(fn (Collection $s) => $s->isNotEmpty());
 
             if ($satirlar) {

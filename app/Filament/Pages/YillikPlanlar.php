@@ -169,6 +169,31 @@ abstract class YillikPlanlar extends Page
         return $this->firma ? IseOzguSenkron::ayniGrubunFirmalari($this->firma)->count() : 0;
     }
 
+    #[Computed]
+    public function firmaEgitimOzelMi(): bool
+    {
+        return IseOzguSenkron::firmaOzelMi($this->firma);
+    }
+
+    /** Firmayı "yalnız bu firmaya özel" yalıtımına alır veya tekrar sektör grubuna dahil eder. */
+    public function firmaOzelDurumuDegistir(bool $ozel): void
+    {
+        if (! $this->firma) {
+            return;
+        }
+
+        IseOzguSenkron::firmaOzelKaydet($this->firma, $ozel);
+        unset($this->firmaEgitimOzelMi, $this->ayniIsGrubuFirmaSayisi);
+
+        Notification::make()
+            ->title($ozel ? 'Firma yalnız kendine özel olarak yalıtıldı' : 'Firma tekrar iş grubu eşitlemesine açıldı')
+            ->body($ozel
+                ? 'Bu firmaya eklenen NACE dışı konular yalnız bu firmada kalır; diğer inşaat/NACE şablonlarını bozmaz ve grup eşitlemede ezilmez.'
+                : 'Artık bu firma etkin iş grubundaki firmalarla eşitlenebilir.')
+            ->success()
+            ->send();
+    }
+
     /**
      * Değerlendirme sayfası açılınca / firma-yıl değişince satırlar sistem
      * kayıtlarından yenilenir (elle düzenlenen satırlar korunur).
@@ -219,7 +244,7 @@ abstract class YillikPlanlar extends Page
     public function updatedFirmaId(): void
     {
         \App\Support\KomutaFirma::sec($this->firmaId);
-        unset($this->firma, $this->plan);
+        unset($this->firma, $this->plan, $this->firmaEgitimOzelMi, $this->ayniIsGrubuFirmaSayisi);
         $this->degerlendirmeyiOtomatikGuncelle();
         $this->gerceklesmeleriIsle();
         $this->egitimPlanModunuSenkronla();
@@ -381,6 +406,7 @@ abstract class YillikPlanlar extends Page
             'egitici' => $this->yeniEgitimEgitici,
             'hedef' => null,
             'hedef_kitle' => $this->yeniEgitimHedefKitle,
+            'firma_ozel' => $kategori === 'ise_ozgu',
             'aylar' => array_fill(0, 12, 'bos'),
         ];
 
@@ -878,6 +904,9 @@ abstract class YillikPlanlar extends Page
 
                 $mevcutAdlar = $mevcutlar->map(fn ($e) => EgitimKonulari::normalize((string) ($e['konu'] ?? '')))->flip();
 
+                $naceSektor = EgitimIcerikOlusturucu::naceSektoru($this->firma->nace_kodu);
+                $firmaOzelMi = ($naceSektor !== null && $sektorAnahtar !== $naceSektor) || filled($ekBaglam);
+
                 foreach ($sonuc['konular'] as $k) {
                     $norm = EgitimKonulari::normalize($k['ad']);
                     if ($mevcutAdlar->has($norm)) {
@@ -890,6 +919,7 @@ abstract class YillikPlanlar extends Page
                         'hedef' => $k['hedef'],
                         'hedef_kitle' => $hedefKitle,
                         'egitici' => $k['egitici'],
+                        'firma_ozel' => $firmaOzelMi,
                         'hafta' => 2,
                         'varsayilan_aylar' => range(0, 11),
                     ]], $kilit)[0];
@@ -905,11 +935,20 @@ abstract class YillikPlanlar extends Page
                 $yeniPlan = YillikPlanSablonu::iseOzguYerlestir($p->egitimler ?? [], $mevcutlar->all());
                 $yeniPlan = YillikEgitimPlanlayici::satirlaraUygula($yeniPlan, $this->firma, $this->egitimPlanModu);
                 $p->update(['egitimler' => $yeniPlan]);
+
+                // Firmanın NACE'si (ör. İnşaat) olmasına rağmen farklı sektör / özel bağlam üretildiyse
+                // yalnız bu firmada kayıtlı kalsın; diğer inşaat firmalarının şablonunu bozmasın!
+                if ($firmaOzelMi) {
+                    IseOzguSenkron::firmaOzelKaydet($this->firma, true);
+                    unset($this->firmaEgitimOzelMi, $this->ayniIsGrubuFirmaSayisi);
+                }
+
                 unset($this->plan);
 
                 $kaydedilen = 0;
                 if (! empty($data['kutuphaneye_kaydet']) && ($userId = Filament::auth()->id())) {
-                    $nace = GeminiIseOzguEgitimUretici::sektorNaceOnekleri($sektorAnahtar, $this->firma->nace_kodu);
+                    // Kütüphaneye kaydederken seçilen sektörün kendi NACE'sini kullan (firmanın inşaat NACE'sine yazma!)
+                    $nace = GeminiIseOzguEgitimUretici::sektorNaceOnekleri($sektorAnahtar);
                     $kaydedilen = GeminiIseOzguEgitimUretici::kutuphaneyeKaydet($userId, $sonuc['konular'], $nace, $hedefKitle);
                 }
 
@@ -985,6 +1024,11 @@ abstract class YillikPlanlar extends Page
                 $hatalar = [];
 
                 foreach ($firmalar as $firma) {
+                    // Firmaya özel NACE dışı konu tanımlanmış firmalar toplu eşitlemede atlanır (özel içeriği bozulmaz).
+                    if (IseOzguSenkron::firmaOzelMi($firma)) {
+                        continue;
+                    }
+
                     $etkinGrup = IseOzguSenkron::etkinGrup($firma);
                     $cacheAnahtar = $etkinGrup ?: ('nace_'.substr(preg_replace('/\D/', '', (string) $firma->nace_kodu), 0, 4) ?: 'genel_'.$firma->id);
 

@@ -282,9 +282,17 @@
                         </select>
                         <x-filament::button size="xs" color="gray" wire:click="firmaEgitimGrubunuUygula(false)">Grubu Kaydet</x-filament::button>
                         <x-filament::button size="xs" color="info" wire:click="firmaEgitimGrubunuUygula(true)">4. Bölümü Gruba Göre Doldur</x-filament::button>
-                        <x-filament::button size="xs" color="success" icon="heroicon-o-arrow-path" wire:click="dorduncuBolumuGrubaEsitle" wire:confirm="Bu firmanın 4. bölüm konuları aynı iş grubundaki tüm firmaların {{ $yil }} planına eşitlensin mi? (Diğer firmalardaki tamamlanmış G ayları korunur.)">
+                        <x-filament::button size="xs" color="success" icon="heroicon-o-arrow-path" wire:click="dorduncuBolumuGrubaEsitle" wire:confirm="Bu firmanın 4. bölüm konuları aynı iş grubundaki tüm firmaların {{ $yil }} planına eşitlensin mi? (Diğer firmalardaki tamamlanmış G ayları ve firmaya özel yalıtılmış firmalar korunur.)">
                             Aynı İş Grubundaki Firmalara Eşitle ({{ $this->ayniIsGrubuFirmaSayisi }} firma)
                         </x-filament::button>
+                        @if ($this->firmaEgitimOzelMi)
+                            <span style="font-size:.72rem;font-weight:700;padding:.18rem .55rem;border-radius:9999px;background:rgb(180 83 9 / .12);color:#92400e">🔒 Yalnız Bu Firmaya Özel (Diğer şablonları etkilemez)</span>
+                            <x-filament::button size="xs" color="gray" wire:click="firmaOzelDurumuDegistir(false)">Gruba Geri Aç</x-filament::button>
+                        @else
+                            <x-filament::button size="xs" color="warning" outlined wire:click="firmaOzelDurumuDegistir(true)" title="Bu firmanın NACE dışı özel konularını yalnız bu firmaya kilitler; diğer inşaat/NACE şablonlarına karışmaz.">
+                                🔒 Yalnız Bu Firmaya Özel Kilitle
+                            </x-filament::button>
+                        @endif
                     </div>
 
                     @if (! empty($egitimOzet['uyarilar']))
