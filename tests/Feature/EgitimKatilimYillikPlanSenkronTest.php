@@ -503,4 +503,47 @@ class EgitimKatilimYillikPlanSenkronTest extends TestCase
         $yanit->sendContent();
         $this->assertStringStartsWith('%PDF', ob_get_clean());
     }
+
+    public function test_tum_firmalar_2027_klasorlu_zip_2026_dorduncu_bolumunu_aktarir_ve_ayri_klasorler_acar(): void
+    {
+        $f1 = Firma::factory()->for($this->uzman)->create(['unvan' => 'Alfa Metal A.Ş.', 'tehlike_sinifi' => 'tehlikeli', 'nace_kodu' => '25.62.01', 'aktif' => true]);
+        $f2 = Firma::factory()->for($this->uzman)->create(['unvan' => 'Beta İnşaat Ltd.', 'tehlike_sinifi' => 'cok_tehlikeli', 'nace_kodu' => '41.00.01', 'aktif' => true]);
+
+        // 2026 planına özel 4. bölüm ekle
+        $plan2026 = YillikPlan::firmaYilIcin($f1, 2026);
+        $e = collect($plan2026->egitimler)->reject(fn ($x) => ($x['kategori'] ?? null) === 'ise_ozgu')->values()->all();
+        $e[] = ['konu' => '2026 Özel Pres Güvenliği', 'kategori' => 'ise_ozgu', 'hedef' => 'Işık perdesi', 'egitici' => 'İGU', 'hafta' => 2, 'aylar' => array_fill(0, 12, 'tamamlandi')];
+        $plan2026->update(['egitimler' => $e]);
+
+        $sonuc = \App\Support\YillikPlanTopluIndirme::tumFirmalarEgitimZip(
+            collect([$f1, $f2]),
+            2027,
+            \Illuminate\Support\Carbon::parse('2027-01-04'),
+            true,
+            true,
+        );
+
+        try {
+            $this->assertSame(2, $sonuc['adet']);
+            $zip = new \ZipArchive;
+            $this->assertTrue($zip->open($sonuc['zip_yolu']) === true);
+            $girdiler = [];
+            for ($i = 0; $i < $zip->numFiles; $i++) {
+                $girdiler[] = $zip->getNameIndex($i);
+            }
+            $zip->close();
+
+            $this->assertCount(2, $girdiler);
+            $this->assertTrue(collect($girdiler)->contains(fn ($g) => str_starts_with($g, 'Alfa Metal A.Ş/') || str_starts_with($g, 'Alfa Metal A.Ş./')));
+            $this->assertTrue(collect($girdiler)->contains(fn ($g) => str_contains($g, 'Beta İnşaat Ltd') && str_ends_with($g, '-2027.xlsx')));
+
+            // 2027 planına 2026'nın özel 4. bölümü taze 'planlandi' (P) olarak aktarılmış olmalı
+            $plan2027 = YillikPlan::where('firma_id', $f1->id)->where('yil', 2027)->firstOrFail();
+            $ozgu2027 = collect($plan2027->egitimler)->firstWhere('konu', '2026 Özel Pres Güvenliği');
+            $this->assertNotNull($ozgu2027);
+            $this->assertSame('planlandi', $ozgu2027['aylar'][0]);
+        } finally {
+            @unlink($sonuc['zip_yolu']);
+        }
+    }
 }

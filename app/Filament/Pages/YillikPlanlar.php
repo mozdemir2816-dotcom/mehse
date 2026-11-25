@@ -1373,6 +1373,61 @@ abstract class YillikPlanlar extends Page
                 ->schema([static::hazirlanmaTarihiAlani(), ImzaSecenegi::alan()])
                 ->action(fn (array $data) => YillikPlanExcelUretici::egitim($this->plan(), ImzaSecenegi::secili($data), static::secilenTarih($data))),
 
+            Action::make('tumFirmalarEgitimZip')
+                ->label('Tüm Firmalar (Klasörlü ZIP)')
+                ->icon('heroicon-o-folder-arrow-down')
+                ->color('info')
+                ->tooltip('Tüm aktif firmalarınızın seçilen yıl Yıllık Eğitim Planlarını her firma için ayrı klasörde ZIP olarak indirir')
+                ->visible(fn () => $this->sekme === 'egitim')
+                ->modalHeading('Tüm Firmalar — Klasörlü Yıllık Eğitim Planı Paketi (ZIP)')
+                ->modalDescription('Her aktif firmanız için ayrı klasör açılır ve o yılın Yıllık Eğitim Planı Excel dosyası içine konur. Yeni yıl planı yoksa bir önceki yılın (ör. 2026) 4. bölümü ve Online/Yüz Yüze dağılımı otomatik aktarılır.')
+                ->modalSubmitActionLabel('Klasörlü ZIP İndir')
+                ->schema([
+                    \Filament\Forms\Components\Select::make('hedef_yil')
+                        ->label('Plan Yılı')
+                        ->options(collect(range(now()->year, now()->year + 2))->mapWithKeys(fn (int $y) => [$y => (string) $y])->all())
+                        ->default(fn () => max($this->yil, now()->year + 1))
+                        ->required(),
+                    DatePicker::make('hazirlanma_tarihi')
+                        ->label('Hazırlanma Tarihi')
+                        ->default(fn () => static::varsayilanHazirlanmaTarihi(max($this->yil, now()->year + 1)))
+                        ->native(false)
+                        ->displayFormat('d.m.Y')
+                        ->required(),
+                    Toggle::make('onceki_yildan_aktar')
+                        ->label('Yeni yıl planı boşsa önceki yıldaki (ör. 2026) 4. bölümü ve karma modu aktar')
+                        ->default(true),
+                    ImzaSecenegi::alan()->inline(),
+                ])
+                ->action(function (array $data) {
+                    $firmalar = Firma::query()
+                        ->where('user_id', Filament::auth()->id())
+                        ->where('aktif', true)
+                        ->orderBy('unvan')
+                        ->get();
+
+                    if ($firmalar->isEmpty()) {
+                        Notification::make()->title('Aktif firma bulunamadı')->warning()->send();
+
+                        return null;
+                    }
+
+                    $hedefYil = (int) ($data['hedef_yil'] ?? $this->yil);
+                    $sonuc = YillikPlanTopluIndirme::tumFirmalarEgitimZip(
+                        $firmalar,
+                        $hedefYil,
+                        static::secilenTarih($data),
+                        ImzaSecenegi::secili($data),
+                        (bool) ($data['onceki_yildan_aktar'] ?? true),
+                    );
+                    $zip = $sonuc['zip_yolu'];
+
+                    return response()->streamDownload(function () use ($zip) {
+                        echo file_get_contents($zip);
+                        @unlink($zip);
+                    }, "tum-firmalar-yillik-egitim-planlari-{$hedefYil}.zip", ['Content-Type' => 'application/zip']);
+                }),
+
             Action::make('topluIndir')
                 ->label('3 Planı Birlikte İndir')
                 ->icon('heroicon-o-archive-box-arrow-down')
